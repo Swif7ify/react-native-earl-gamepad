@@ -1,12 +1,17 @@
 # react-native-earl-gamepad
 
-Lightweight, WebView-based Gamepad bridge for React Native that surfaces all common buttons, sticks, d-pad, and connect/disconnect events.
+WebView-based gamepad bridge for React Native. Polls `navigator.getGamepads()` in a hidden WebView and surfaces buttons, sticks, d-pad, and connection events to JS.
 
-## Features
+-   Components: `GamepadBridge`, `useGamepad`, and `GamepadDebug`.
+-   Deadzone handling (default `0.15`) with auto-clear on disconnect.
+-   Typed events for buttons, axes, d-pad, and status.
 
-- Hidden WebView polling `navigator.getGamepads()` (index 0) and emitting button/axis/status events.
-- `GamepadBridge` component, `useGamepad` hook, and `GamepadDebug` visual tester.
-- Deadzone handling for sticks (default 0.15) and auto-clear on disconnect.
+## Requirements
+
+-   React Native `>=0.72`
+-   React `>=18`
+-   `react-native-webview` `>=13`
+-   Runs on iOS and Android (relies on WebView Gamepad API support).
 
 ## Install
 
@@ -16,91 +21,124 @@ npm install react-native-earl-gamepad react-native-webview
 yarn add react-native-earl-gamepad react-native-webview
 ```
 
-## Quick start
+## Usage
+
+### Render the bridge (minimal)
+
+Render the hidden WebView once in your tree to start polling the first connected pad (`navigator.getGamepads()[0]`).
 
 ```tsx
-import { GamepadBridge } from 'react-native-earl-gamepad';
+import { GamepadBridge } from "react-native-earl-gamepad";
 
 export function Controls() {
-    return (
-        <GamepadBridge
-            enabled
-            onButton={(e) => console.log('button', e.button, e.pressed, e.value)}
-            onAxis={(e) => console.log('axis', e.axis, e.value)}
-            onDpad={(e) => console.log('dpad', e.key, e.pressed)}
-            onStatus={(s) => console.log('status', s.state)}
-        />
-    );
+	return (
+		<GamepadBridge
+			enabled
+			onButton={(e) =>
+				console.log("button", e.button, e.pressed, e.value)
+			}
+			onAxis={(e) => console.log("axis", e.axis, e.value)}
+			onDpad={(e) => console.log("dpad", e.key, e.pressed)}
+			onStatus={(e) => console.log("status", e.state)}
+		/>
+	);
 }
 ```
 
-### Using the hook
+### Hook for stateful consumption
+
+`useGamepad` keeps pressed state and axes for you. You still need to render the provided `bridge` element once.
 
 ```tsx
-import { useGamepad } from 'react-native-earl-gamepad';
+import { useGamepad } from "react-native-earl-gamepad";
 
 export function HUD() {
-    const { pressedButtons, axes, isPressed, bridge } = useGamepad({ enabled: true });
+	const { pressedButtons, axes, isPressed, bridge } = useGamepad({
+		enabled: true,
+	});
 
-    return (
-        <>
-            {bridge}
-            <Text>Pressed: {Array.from(pressedButtons).join(', ') || 'none'}</Text>
-            <Text>
-                Left stick: x {axes.leftX?.toFixed(2)} / y {axes.leftY?.toFixed(2)}
-            </Text>
-            <Text>A held? {isPressed('a') ? 'yes' : 'no'}</Text>
-        </>
-    );
+	return (
+		<>
+			{bridge}
+			<Text>
+				Pressed: {Array.from(pressedButtons).join(", ") || "none"}
+			</Text>
+			<Text>
+				Left stick: x {axes.leftX?.toFixed(2)} / y{" "}
+				{axes.leftY?.toFixed(2)}
+			</Text>
+			<Text>A held? {isPressed("a") ? "yes" : "no"}</Text>
+		</>
+	);
 }
 ```
 
 ### Visual debugger
 
+Drop-in component to see a controller diagram that lights up buttons, shows stick offsets, and lists state.
+
 ```tsx
-import { GamepadDebug } from 'react-native-earl-gamepad';
+import { GamepadDebug } from "react-native-earl-gamepad";
 
 export function DebugScreen() {
-    return <GamepadDebug />;
+	return <GamepadDebug axisThreshold={0.2} />;
 }
 ```
-
-`GamepadDebug` renders a controller diagram that lights up buttons, shows stick offsets, and lists pressed/axes values.
 
 ## API
 
 ### `GamepadBridge` props
 
-- `enabled?: boolean` — mount/unmount the hidden WebView. Default `true`.
-- `axisThreshold?: number` — deadzone for axes. Default `0.15`.
-- `onButton?: (event)` — `{ type:'button', button, index, pressed, value }`.
-- `onAxis?: (event)` — `{ type:'axis', axis, index, value }`.
-- `onDpad?: (event)` — `{ type:'dpad', key, pressed }` convenience mapped from buttons 12–15.
-- `onStatus?: (event)` — `{ type:'status', state:'connected'|'disconnected' }`.
-- `style?: StyleProp<ViewStyle>` — optional override; default is a 1×1 transparent view.
+-   `enabled?: boolean` — mount/unmount the hidden WebView. Default `true`.
+-   `axisThreshold?: number` — deadzone applied to axes. Default `0.15`.
+-   `onButton?: (event: ButtonEvent) => void` — fired on button press/release/value change.
+-   `onAxis?: (event: AxisEvent) => void` — fired when an axis changes beyond threshold.
+-   `onDpad?: (event: DpadEvent) => void` — convenience mapping of button indices 12–15.
+-   `onStatus?: (event: StatusEvent) => void` — `connected` / `disconnected` events.
+-   `style?: StyleProp<ViewStyle>` — override container; default is a 1×1 transparent view.
 
-### `useGamepad` return
+### `useGamepad` options and return
 
-- `pressedButtons: Set<GamepadButtonName>` — current pressed buttons (named or `button-N`).
-- `axes: Partial<Record<StickAxisName, number>>` — stick/axis values with deadzone applied.
-- `isPressed(key)` — helper to query a button.
-- `bridge: JSX.Element | null` — render once in your tree to enable polling.
+Options:
+
+-   `enabled?: boolean` — defaults to `true`. When false, state resets and axes zero out.
+-   `axisThreshold?: number` — deadzone for axes. Default `0.15`.
+-   `onButton`, `onAxis`, `onDpad`, `onStatus` — same semantics as `GamepadBridge`.
+
+Return shape:
+
+-   `pressedButtons: Set<GamepadButtonName>` — current pressed buttons.
+-   `axes: Partial<Record<StickAxisName, number>>` — axis values with deadzone applied.
+-   `isPressed(key: GamepadButtonName): boolean` — helper to check a single button.
+-   `bridge: JSX.Element | null` — render once to enable polling.
 
 ### `GamepadDebug`
 
-Drop-in component to visualize inputs. Accepts the same `enabled` and `axisThreshold` props as the hook/bridge.
+-   `enabled?: boolean` — defaults to `true`.
+-   `axisThreshold?: number` — defaults to `0.15`.
 
-### Types
+## Events and types
 
-- `GamepadButtonName`: `a | b | x | y | lb | rb | lt | rt | back | start | ls | rs | dpadUp | dpadDown | dpadLeft | dpadRight | home | button-N`
-- `StickAxisName`: `leftX | leftY | rightX | rightY | axis-N`
+-   `ButtonEvent`: `{ type: 'button'; button: GamepadButtonName; index: number; pressed: boolean; value: number }`
+-   `AxisEvent`: `{ type: 'axis'; axis: StickAxisName; index: number; value: number }`
+-   `DpadEvent`: `{ type: 'dpad'; key: 'up' | 'down' | 'left' | 'right'; pressed: boolean }`
+-   `StatusEvent`: `{ type: 'status'; state: 'connected' | 'disconnected' }`
 
-## Notes
+Button names map to the standard gamepad layout (`a`, `b`, `x`, `y`, `lb`, `rb`, `lt`, `rt`, `back`, `start`, `ls`, `rs`, `dpadUp`, `dpadDown`, `dpadLeft`, `dpadRight`, `home`). Unknown indices fall back to `button-N`. Axes map to `leftX`, `leftY`, `rightX`, `rightY` with fallbacks `axis-N`.
 
-- Reads only the first connected pad (`navigator.getGamepads()[0]`).
-- D-pad events are emitted from buttons 12–15; sticks pass through as axes with deadzone applied.
-- On disconnect, all pressed states are cleared and release events are emitted.
-- The WebView must stay mounted; avoid remounting each render to prevent losing state.
+## Behavior notes
+
+-   Reads only the first controller (`navigator.getGamepads()[0]`).
+-   D-pad events mirror buttons 12–15; they emit separate `dpad` messages in addition to the raw button events.
+-   On disconnect, pressed state is cleared and release events are emitted so you do not get stuck buttons.
+-   Keep the bridge mounted; remounting clears internal state and can drop transient events.
+-   Axis values below the deadzone are coerced to `0`. Adjust `axisThreshold` if you need more sensitivity.
+
+## Patterns
+
+-   **Single place to render**: put the bridge near the root (e.g., inside your `App` provider layer) and consume state anywhere via `useGamepad`.
+-   **Status-aware UI**: use `onStatus` to disable controls until `connected` and to reset UI on `disconnected`.
+-   **Custom deadzone per screen**: pass `axisThreshold` to either the bridge or the hook depending on which you render.
 
 ## Development
 
@@ -109,7 +147,7 @@ npm install
 npm run build
 ```
 
-Outputs to `dist/` with type declarations.
+Build outputs to `dist/` with type declarations.
 
 ## License
 
