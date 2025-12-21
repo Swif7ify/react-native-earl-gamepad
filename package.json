@@ -32,12 +32,12 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/earlo/react-native-earl-gamepad.git"
+        "url": "git+https://github.com/Swif7ify/react-native-earl-gamepad.git"
     },
     "bugs": {
-        "url": "https://github.com/earlo/react-native-earl-gamepad/issues"
+        "url": "https://github.com/Swif7ify/react-native-earl-gamepad/issues"
     },
-    "homepage": "https://github.com/earlo/react-native-earl-gamepad#readme",
+    "homepage": "https://github.com/Swif7ify/react-native-earl-gamepad#readme",
     "author": "Ordovez, Earl Romeo",
     "license": "MIT"
 }
