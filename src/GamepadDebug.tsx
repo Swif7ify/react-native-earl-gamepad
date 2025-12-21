@@ -103,7 +103,7 @@ export default function GamepadDebug({
 														{
 															translateY:
 																axis("leftY") *
-																-20,
+																20,
 														},
 													],
 												},
@@ -249,7 +249,7 @@ export default function GamepadDebug({
 														{
 															translateY:
 																axis("rightY") *
-																-20,
+																20,
 														},
 													],
 												},
