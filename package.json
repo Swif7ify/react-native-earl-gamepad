@@ -1,43 +1,43 @@
 {
-    "name": "react-native-earl-gamepad",
-    "version": "0.1.0",
-    "description": "React Native gamepad bridge via WebView (buttons, sticks, d-pad, status).",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "files": [
-        "dist",
-        "README.md"
-    ],
-    "scripts": {
-        "build": "tsc -p .",
-        "clean": "rimraf dist"
-    },
-    "peerDependencies": {
-        "react": ">=18",
-        "react-native": ">=0.72",
-        "react-native-webview": ">=13"
-    },
-    "devDependencies": {
-        "@types/react": "^19.0.0",
-        "react": "^19.0.0",
-        "react-native": "^0.81.5",
-        "react-native-webview": "^13.12.2",
-        "typescript": "^5.3.3"
-    },
-    "keywords": [
-        "react-native",
-        "gamepad",
-        "webview",
-        "controller"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Swif7ify/react-native-earl-gamepad.git"
-    },
-    "bugs": {
-        "url": "https://github.com/Swif7ify/react-native-earl-gamepad/issues"
-    },
-    "homepage": "https://github.com/Swif7ify/react-native-earl-gamepad#readme",
-    "author": "Ordovez, Earl Romeo",
-    "license": "MIT"
+	"name": "react-native-earl-gamepad",
+	"version": "0.1.0",
+	"description": "React Native gamepad bridge via WebView (buttons, sticks, d-pad, status).",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist",
+		"README.md"
+	],
+	"scripts": {
+		"build": "tsc -p .",
+		"clean": "rimraf dist"
+	},
+	"peerDependencies": {
+		"react": ">=18",
+		"react-native": ">=0.72",
+		"react-native-webview": ">=13"
+	},
+	"devDependencies": {
+		"@types/react": "^19.0.0",
+		"react": "^19.0.0",
+		"react-native": "^0.81.5",
+		"react-native-webview": "^13.12.2",
+		"typescript": "^5.3.3"
+	},
+	"keywords": [
+		"react-native",
+		"gamepad",
+		"webview",
+		"controller"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Swif7ify/react-native-earl-gamepad.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Swif7ify/react-native-earl-gamepad/issues"
+	},
+	"homepage": "https://github.com/Swif7ify/react-native-earl-gamepad#readme",
+	"author": "Ordovez, Earl Romeo",
+	"license": "MIT"
 }
