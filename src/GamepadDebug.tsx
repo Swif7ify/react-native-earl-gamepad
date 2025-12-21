@@ -16,7 +16,7 @@ export default function GamepadDebug({
 	enabled = true,
 	axisThreshold = 0.15,
 }: Props) {
-	const { bridge, pressedButtons, axes } = useGamepad({
+	const { bridge, pressedButtons, axes, buttonValues } = useGamepad({
 		enabled,
 		axisThreshold,
 	});
@@ -27,6 +27,7 @@ export default function GamepadDebug({
 	);
 	const pressed = (key: GamepadButtonName) => pressedButtons.has(key);
 	const axis = (key: StickAxisName) => axes[key] ?? 0;
+	const trigger = (key: GamepadButtonName) => buttonValues[key] ?? 0;
 
 	return (
 		<View style={styles.container}>
@@ -76,6 +77,19 @@ export default function GamepadDebug({
 									]}
 								>
 									<Text style={styles.label}>LT</Text>
+									<View style={styles.triggerBar}>
+										<View
+											style={{
+												...styles.triggerFill,
+												width: `${Math.round(
+													trigger("lt") * 100
+												)}%`,
+											}}
+										/>
+									</View>
+									<Text style={styles.smallLabel}>
+										{(trigger("lt") ?? 0).toFixed(2)}
+									</Text>
 								</View>
 								<View
 									style={[
@@ -84,6 +98,19 @@ export default function GamepadDebug({
 									]}
 								>
 									<Text style={styles.label}>RT</Text>
+									<View style={styles.triggerBar}>
+										<View
+											style={{
+												...styles.triggerFill,
+												width: `${Math.round(
+													trigger("rt") * 100
+												)}%`,
+											}}
+										/>
+									</View>
+									<Text style={styles.smallLabel}>
+										{(trigger("rt") ?? 0).toFixed(2)}
+									</Text>
 								</View>
 							</View>
 
@@ -103,7 +130,7 @@ export default function GamepadDebug({
 														{
 															translateY:
 																axis("leftY") *
-																20,
+																-20,
 														},
 													],
 												},
@@ -249,7 +276,7 @@ export default function GamepadDebug({
 														{
 															translateY:
 																axis("rightY") *
-																20,
+																-20,
 														},
 													],
 												},
@@ -451,6 +478,20 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: "#cbd5e1",
 		alignItems: "center",
+	},
+	triggerBar: {
+		marginTop: 6,
+		width: "100%",
+		height: 10,
+		borderRadius: 6,
+		backgroundColor: "#f1f5f9",
+		overflow: "hidden",
+		borderWidth: 1,
+		borderColor: "#cbd5e1",
+	},
+	triggerFill: {
+		height: "100%",
+		backgroundColor: "#2563eb",
 	},
 	label: {
 		color: "#0f172a",

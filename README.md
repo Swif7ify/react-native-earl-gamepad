@@ -109,6 +109,7 @@ Return shape:
 
 -   `pressedButtons: Set<GamepadButtonName>` — current pressed buttons.
 -   `axes: Partial<Record<StickAxisName, number>>` — axis values with deadzone applied.
+-   `buttonValues: Partial<Record<GamepadButtonName, number>>` — last analog value per button (useful for LT/RT triggers).
 -   `isPressed(key: GamepadButtonName): boolean` — helper to check a single button.
 -   `bridge: JSX.Element | null` — render once to enable polling.
 
@@ -133,6 +134,7 @@ Button names map to the standard gamepad layout (`a`, `b`, `x`, `y`, `lb`, `rb`,
 -   On disconnect, pressed state is cleared and release events are emitted so you do not get stuck buttons.
 -   Keep the bridge mounted; remounting clears internal state and can drop transient events.
 -   Axis values below the deadzone are coerced to `0`. Adjust `axisThreshold` if you need more sensitivity.
+-   LT/RT expose analog values via `buttonValues.lt` and `buttonValues.rt`.
 
 ## Patterns
 
