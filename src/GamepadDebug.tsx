@@ -12,6 +12,302 @@ const trackedAxes: StickAxisName[] = ["leftX", "leftY", "rightX", "rightY"];
 
 const format = (value?: number) => (value ?? 0).toFixed(2);
 
+type ControllerVisualProps = {
+	pressed: (key: GamepadButtonName) => boolean;
+	axis: (key: StickAxisName) => number;
+	value: (key: GamepadButtonName) => number;
+};
+
+function ControllerVisual({ pressed, axis, value }: ControllerVisualProps) {
+	const level = (name: GamepadButtonName) => {
+		const v = value(name);
+		return Math.max(v, pressed(name) ? 1 : 0);
+	};
+
+	const mix = (a: number, b: number, t: number) =>
+		Math.round(a + (b - a) * t);
+	const stickColor = (mag: number) => {
+		const clamped = Math.min(1, Math.max(0, mag));
+		const r = mix(34, 37, clamped);
+		const g = mix(34, 99, clamped);
+		const b = mix(34, 235, clamped);
+		return `rgb(${r}, ${g}, ${b})`;
+	};
+	const stickInner = (mag: number) => {
+		const clamped = Math.min(1, Math.max(0, mag));
+		const shade = mix(109, 200, clamped);
+		return `rgb(${shade}, ${shade}, ${shade})`;
+	};
+
+	const leftMag = Math.min(1, Math.hypot(axis("leftX"), axis("leftY")));
+	const rightMag = Math.min(1, Math.hypot(axis("rightX"), axis("rightY")));
+
+	return (
+		<View style={styles.psWrapper}>
+			<View style={styles.psContainer}>
+				<View style={styles.psShoulderRow}>
+					<View
+						style={[
+							styles.psShoulder,
+							styles.psShoulderLeft,
+							level("lb") > 0 && styles.psShoulderActive,
+							{ opacity: 0.55 + 0.45 * level("lb") },
+						]}
+					>
+						<Text
+							style={[
+								styles.psShoulderText,
+								level("lb") > 0 && styles.psShoulderTextActive,
+							]}
+						>
+							L1
+						</Text>
+					</View>
+					<View
+						style={[
+							styles.psShoulder,
+							styles.psShoulderLeft,
+							level("lt") > 0 && styles.psShoulderActive,
+							{ opacity: 0.55 + 0.45 * level("lt") },
+						]}
+					>
+						<Text
+							style={[
+								styles.psShoulderText,
+								level("lt") > 0 && styles.psShoulderTextActive,
+							]}
+						>
+							L2
+						</Text>
+					</View>
+					<View
+						style={[
+							styles.psShoulder,
+							styles.psShoulderRight,
+							level("rb") > 0 && styles.psShoulderActive,
+							{ opacity: 0.55 + 0.45 * level("rb") },
+						]}
+					>
+						<Text
+							style={[
+								styles.psShoulderText,
+								level("rb") > 0 && styles.psShoulderTextActive,
+							]}
+						>
+							R1
+						</Text>
+					</View>
+					<View
+						style={[
+							styles.psShoulder,
+							styles.psShoulderRight,
+							level("rt") > 0 && styles.psShoulderActive,
+							{ opacity: 0.55 + 0.45 * level("rt") },
+						]}
+					>
+						<Text
+							style={[
+								styles.psShoulderText,
+								level("rt") > 0 && styles.psShoulderTextActive,
+							]}
+						>
+							R2
+						</Text>
+					</View>
+				</View>
+
+				<View style={styles.psMiddle} />
+				<View style={styles.psPaveTactile} />
+				<View
+					style={[
+						styles.psShare,
+						pressed("back") && styles.psActiveButton,
+					]}
+				/>
+				<View
+					style={[
+						styles.psOptions,
+						pressed("start") && styles.psActiveButton,
+					]}
+				/>
+
+				<View style={styles.psLeftHand}>
+					<View style={styles.psLeftPad}>
+						<View
+							style={[
+								styles.psArrowUp,
+								pressed("dpadUp") && styles.psActiveButton,
+							]}
+						/>
+						<View
+							style={[
+								styles.psArrowDown,
+								pressed("dpadDown") && styles.psActiveButton,
+							]}
+						/>
+						<View
+							style={[
+								styles.psArrowRight,
+								pressed("dpadRight") && styles.psActiveButton,
+							]}
+						/>
+						<View
+							style={[
+								styles.psArrowLeft,
+								pressed("dpadLeft") && styles.psActiveButton,
+							]}
+						/>
+					</View>
+				</View>
+
+				<View style={styles.psRightHand}>
+					<View style={styles.psRightPad}>
+						<View
+							style={[
+								styles.psTriangle,
+								pressed("y") && styles.psActiveButton,
+							]}
+						/>
+						<View
+							style={[
+								styles.psTriangleBas,
+								pressed("y") && styles.psTriangleLineActive,
+							]}
+						/>
+						<View
+							style={[
+								styles.psTriangleGauche,
+								pressed("y") && styles.psTriangleLineActive,
+							]}
+						/>
+						<View
+							style={[
+								styles.psTriangleDroit,
+								pressed("y") && styles.psTriangleLineActive,
+							]}
+						/>
+
+						<View
+							style={[
+								styles.psCarre,
+								pressed("x") && styles.psActiveButton,
+							]}
+						>
+							<View
+								style={[
+									styles.psCarreRose,
+									pressed("x") && styles.psPinkActive,
+								]}
+							/>
+						</View>
+
+						<View
+							style={[
+								styles.psRond,
+								pressed("b") && styles.psActiveButton,
+							]}
+						>
+							<View
+								style={[
+									styles.psRondRouge,
+									pressed("b") && styles.psRedActive,
+								]}
+							/>
+						</View>
+
+						<View
+							style={[
+								styles.psCroix,
+								pressed("a") && styles.psActiveButton,
+							]}
+						>
+							<View
+								style={[
+									styles.psCroixBleue,
+									pressed("a") && styles.psCrossLineActive,
+								]}
+							/>
+							<View
+								style={[
+									styles.psCroixBleue2,
+									pressed("a") && styles.psCrossLineActive,
+								]}
+							/>
+						</View>
+					</View>
+
+					<View
+						style={[
+							styles.psRollLeft,
+							pressed("ls") && styles.psStickPressed,
+						]}
+					>
+						<View
+							style={[
+								styles.psRollIn,
+								{
+									transform: [
+										{ translateX: axis("leftX") * 6 },
+										{ translateY: axis("leftY") * -6 },
+									],
+									backgroundColor: stickColor(leftMag),
+								},
+								pressed("ls") && styles.psStickInnerPressed,
+							]}
+						>
+							<View
+								style={[
+									styles.psRollInIn,
+									{ backgroundColor: stickInner(leftMag) },
+									pressed("ls") &&
+										styles.psStickCenterPressed,
+								]}
+							/>
+						</View>
+					</View>
+
+					<View
+						style={[
+							styles.psPsButton,
+							pressed("home") && styles.psActiveButton,
+						]}
+					/>
+
+					<View
+						style={[
+							styles.psRollRight,
+							pressed("rs") && styles.psStickPressed,
+						]}
+					>
+						<View
+							style={[
+								styles.psRollIn,
+								{
+									transform: [
+										{ translateX: axis("rightX") * 6 },
+										{ translateY: axis("rightY") * -6 },
+									],
+									backgroundColor: stickColor(rightMag),
+								},
+								pressed("rs") && styles.psStickInnerPressed,
+							]}
+						>
+							<View
+								style={[
+									styles.psRollInIn,
+									{ backgroundColor: stickInner(rightMag) },
+									pressed("rs") &&
+										styles.psStickCenterPressed,
+								]}
+							/>
+						</View>
+					</View>
+				</View>
+			</View>
+		</View>
+	);
+}
+
 export default function GamepadDebug({
 	enabled = true,
 	axisThreshold = 0.15,
@@ -26,8 +322,8 @@ export default function GamepadDebug({
 		[pressedButtons]
 	);
 	const pressed = (key: GamepadButtonName) => pressedButtons.has(key);
-	const axis = (key: StickAxisName) => axes[key] ?? 0;
-	const trigger = (key: GamepadButtonName) => buttonValues[key] ?? 0;
+	const axisValue = (key: StickAxisName) => axes[key] ?? 0;
+	const buttonValue = (key: GamepadButtonName) => buttonValues[key] ?? 0;
 
 	return (
 		<View style={styles.container}>
@@ -36,257 +332,16 @@ export default function GamepadDebug({
 				showsVerticalScrollIndicator={false}
 			>
 				{bridge}
-
-				<View style={styles.headerRow}>
-					<Text style={styles.title}>Gamepad Debug</Text>
-					<View style={styles.tag}>
-						<Text style={styles.tagText}>
-							Enabled {enabled ? "On" : "Off"}
-						</Text>
-					</View>
-				</View>
-
 				<View style={styles.body}>
 					<View style={[styles.card, styles.controllerCard]}>
 						<Text style={styles.cardTitle}>Controller</Text>
 
 						<View style={styles.controller}>
-							<View style={styles.shoulders}>
-								<View
-									style={[
-										styles.bumper,
-										pressed("lb") && styles.active,
-									]}
-								>
-									<Text style={styles.label}>LB</Text>
-								</View>
-								<View
-									style={[
-										styles.bumper,
-										pressed("rb") && styles.active,
-									]}
-								>
-									<Text style={styles.label}>RB</Text>
-								</View>
-							</View>
-							<View style={styles.triggers}>
-								<View
-									style={[
-										styles.trigger,
-										pressed("lt") && styles.active,
-									]}
-								>
-									<Text style={styles.label}>LT</Text>
-									<View style={styles.triggerBar}>
-										<View
-											style={{
-												...styles.triggerFill,
-												width: `${Math.round(
-													trigger("lt") * 100
-												)}%`,
-											}}
-										/>
-									</View>
-									<Text style={styles.smallLabel}>
-										{(trigger("lt") ?? 0).toFixed(2)}
-									</Text>
-								</View>
-								<View
-									style={[
-										styles.trigger,
-										pressed("rt") && styles.active,
-									]}
-								>
-									<Text style={styles.label}>RT</Text>
-									<View style={styles.triggerBar}>
-										<View
-											style={{
-												...styles.triggerFill,
-												width: `${Math.round(
-													trigger("rt") * 100
-												)}%`,
-											}}
-										/>
-									</View>
-									<Text style={styles.smallLabel}>
-										{(trigger("rt") ?? 0).toFixed(2)}
-									</Text>
-								</View>
-							</View>
-
-							<View style={styles.midRow}>
-								<View style={styles.stickZone}>
-									<View style={styles.stickRing}>
-										<View
-											style={[
-												styles.stick,
-												{
-													transform: [
-														{
-															translateX:
-																axis("leftX") *
-																20,
-														},
-														{
-															translateY:
-																axis("leftY") *
-																-20,
-														},
-													],
-												},
-												pressed("ls") && styles.active,
-											]}
-										/>
-									</View>
-									<Text style={styles.smallLabel}>LS</Text>
-								</View>
-
-								<View style={styles.centerCluster}>
-									<View
-										style={[
-											styles.smallKey,
-											pressed("back") && styles.active,
-										]}
-									>
-										<Text style={styles.label}>Back</Text>
-									</View>
-									<View
-										style={[
-											styles.smallKey,
-											pressed("start") && styles.active,
-										]}
-									>
-										<Text style={styles.label}>Start</Text>
-									</View>
-									<View
-										style={[
-											styles.smallKey,
-											pressed("home") && styles.active,
-										]}
-									>
-										<Text style={styles.label}>Home</Text>
-									</View>
-								</View>
-
-								<View style={styles.faceCluster}>
-									<View style={styles.faceRow}>
-										<View
-											style={[
-												styles.faceButton,
-												pressed("y") &&
-													styles.faceActive,
-											]}
-										>
-											<Text style={styles.faceText}>
-												Y
-											</Text>
-										</View>
-									</View>
-									<View style={styles.faceRow}>
-										<View
-											style={[
-												styles.faceButton,
-												pressed("x") &&
-													styles.faceActive,
-											]}
-										>
-											<Text style={styles.faceText}>
-												X
-											</Text>
-										</View>
-										<View
-											style={[
-												styles.faceButton,
-												pressed("b") &&
-													styles.faceActive,
-											]}
-										>
-											<Text style={styles.faceText}>
-												B
-											</Text>
-										</View>
-									</View>
-									<View style={styles.faceRow}>
-										<View
-											style={[
-												styles.faceButton,
-												pressed("a") &&
-													styles.faceActive,
-											]}
-										>
-											<Text style={styles.faceText}>
-												A
-											</Text>
-										</View>
-									</View>
-								</View>
-							</View>
-
-							<View style={styles.bottomRow}>
-								<View style={styles.dpad}>
-									<View
-										style={[
-											styles.dpadKey,
-											styles.dpadVertical,
-											styles.dpadUp,
-											pressed("dpadUp") && styles.active,
-										]}
-									/>
-									<View
-										style={[
-											styles.dpadKey,
-											styles.dpadVertical,
-											styles.dpadDown,
-											pressed("dpadDown") &&
-												styles.active,
-										]}
-									/>
-									<View
-										style={[
-											styles.dpadKey,
-											styles.dpadHorizontal,
-											styles.dpadLeft,
-											pressed("dpadLeft") &&
-												styles.active,
-										]}
-									/>
-									<View
-										style={[
-											styles.dpadKey,
-											styles.dpadHorizontal,
-											styles.dpadRight,
-											pressed("dpadRight") &&
-												styles.active,
-										]}
-									/>
-								</View>
-
-								<View style={styles.stickZone}>
-									<View style={styles.stickRing}>
-										<View
-											style={[
-												styles.stick,
-												{
-													transform: [
-														{
-															translateX:
-																axis("rightX") *
-																20,
-														},
-														{
-															translateY:
-																axis("rightY") *
-																-20,
-														},
-													],
-												},
-												pressed("rs") && styles.active,
-											]}
-										/>
-									</View>
-									<Text style={styles.smallLabel}>RS</Text>
-								</View>
-							</View>
+							<ControllerVisual
+								pressed={pressed}
+								axis={axisValue}
+								value={buttonValue}
+							/>
 						</View>
 					</View>
 
@@ -332,7 +387,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		width: "100%",
-		padding: 12,
 		backgroundColor: "#f5f7fb",
 	},
 	scrollContent: {
@@ -427,7 +481,6 @@ const styles = StyleSheet.create({
 		flexShrink: 1,
 		flexBasis: "100%",
 		backgroundColor: "#ffffff",
-		borderRadius: 14,
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
 		padding: 12,
@@ -446,177 +499,471 @@ const styles = StyleSheet.create({
 	},
 	controller: {
 		backgroundColor: "#f8fafc",
-		borderRadius: 14,
 		borderWidth: 1,
 		borderColor: "#e2e8f0",
 		padding: 12,
-		gap: 12,
-	},
-	shoulders: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-	},
-	triggers: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		gap: 8,
-	},
-	bumper: {
-		flex: 1,
-		paddingVertical: 8,
-		borderRadius: 10,
-		backgroundColor: "#e2e8f0",
-		borderWidth: 1,
-		borderColor: "#cbd5e1",
-		alignItems: "center",
-	},
-	trigger: {
-		flex: 1,
-		paddingVertical: 8,
-		borderRadius: 10,
-		backgroundColor: "#e2e8f0",
-		borderWidth: 1,
-		borderColor: "#cbd5e1",
-		alignItems: "center",
-	},
-	triggerBar: {
-		marginTop: 6,
-		width: "100%",
-		height: 10,
-		borderRadius: 6,
-		backgroundColor: "#f1f5f9",
-		overflow: "hidden",
-		borderWidth: 1,
-		borderColor: "#cbd5e1",
-	},
-	triggerFill: {
-		height: "100%",
-		backgroundColor: "#2563eb",
-	},
-	label: {
-		color: "#0f172a",
-		fontSize: 12,
-		fontWeight: "700",
-	},
-	smallLabel: {
-		color: "#475569",
-		fontSize: 11,
-		marginTop: 4,
-		textAlign: "center",
-	},
-	midRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		gap: 12,
-	},
-	centerCluster: {
-		alignItems: "center",
-		gap: 6,
-	},
-	smallKey: {
-		paddingVertical: 6,
-		paddingHorizontal: 10,
-		borderRadius: 8,
-		backgroundColor: "#e2e8f0",
-		borderWidth: 1,
-		borderColor: "#cbd5e1",
-	},
-	faceCluster: {
-		alignItems: "center",
-		gap: 4,
-	},
-	faceRow: {
-		flexDirection: "row",
-		gap: 8,
-		justifyContent: "center",
-	},
-	faceButton: {
-		width: 42,
-		height: 42,
-		borderRadius: 21,
-		backgroundColor: "#e0f2fe",
-		borderWidth: 1,
-		borderColor: "#bae6fd",
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	faceText: {
-		color: "#0f172a",
-		fontWeight: "800",
-	},
-	faceActive: {
-		backgroundColor: "#2563eb",
-		borderColor: "#1d4ed8",
-		shadowColor: "#2563eb",
-		shadowOpacity: 0.6,
-		shadowRadius: 6,
-	},
-	stickZone: {
-		width: 96,
-		alignItems: "center",
-		gap: 6,
-	},
-	stickRing: {
-		width: 84,
-		height: 84,
-		borderRadius: 42,
-		borderWidth: 1,
-		borderColor: "#cbd5e1",
-		backgroundColor: "#f8fafc",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	stick: {
-		width: 38,
-		height: 38,
-		borderRadius: 19,
-		backgroundColor: "#e2e8f0",
-		borderWidth: 2,
-		borderColor: "#cbd5e1",
-	},
-	bottomRow: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		gap: 12,
-	},
-	dpad: {
-		width: 120,
-		height: 120,
-		alignItems: "center",
-		justifyContent: "center",
-		position: "relative",
-	},
-	dpadKey: {
-		position: "absolute",
-		backgroundColor: "#e2e8f0",
-		borderColor: "#cbd5e1",
-		borderWidth: 1,
-		borderRadius: 6,
-	},
-	dpadVertical: {
-		width: 28,
-		height: 46,
-	},
-	dpadHorizontal: {
-		width: 46,
-		height: 28,
-	},
-	active: {
-		borderColor: "#2563eb",
-		backgroundColor: "#2563eb",
-		shadowColor: "#2563eb",
-		shadowOpacity: 0.5,
-		shadowRadius: 4,
-	},
-	dpadUp: { top: 6, left: 46 },
-	dpadDown: { bottom: 6, left: 46 },
-	dpadLeft: { left: 6, top: 46 },
-	dpadRight: { right: 6, top: 46 },
 	axesGrid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
 		gap: 8,
+	},
+	psWrapper: {
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	psShoulderRow: {
+		position: "absolute",
+		top: 10,
+		left: 0,
+		right: 0,
+		flexDirection: "row",
+		justifyContent: "space-between",
+		paddingHorizontal: 24,
+		zIndex: 25,
+	},
+	psShoulder: {
+		minWidth: 62,
+		paddingVertical: 8,
+		paddingHorizontal: 14,
+		borderRadius: 999,
+		backgroundColor: "#e2e8f0",
+		borderWidth: 1,
+		borderColor: "#cbd5e1",
+		alignItems: "center",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.25,
+		shadowRadius: 6,
+		elevation: 4,
+	},
+	psShoulderLeft: {
+		marginRight: 6,
+	},
+	psShoulderRight: {
+		marginLeft: 6,
+	},
+	psShoulderActive: {
+		backgroundColor: "#2563eb",
+		borderColor: "#1e3a8a",
+		shadowColor: "#2563eb",
+		shadowOpacity: 0.5,
+	},
+	psShoulderText: {
+		color: "#0f172a",
+		fontWeight: "700",
+	},
+	psShoulderTextActive: {
+		color: "#e0f2fe",
+	},
+	psContainer: {
+		position: "relative",
+		width: 500,
+		height: 350,
+	},
+	psMiddle: {
+		width: 395,
+		height: 160,
+		backgroundColor: "#e0e0e0",
+		marginLeft: 27,
+		borderRadius: 25,
+		position: "absolute",
+		zIndex: 0,
+		top: 80,
+	},
+	psPaveTactile: {
+		width: 150,
+		height: 80,
+		backgroundColor: "#333",
+		marginLeft: 147,
+		borderRadius: 7,
+		position: "absolute",
+		zIndex: 10,
+		top: 80,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 0 },
+		shadowOpacity: 0.5,
+		shadowRadius: 10,
+		elevation: 5,
+	},
+	psShare: {
+		width: 12,
+		height: 25,
+		position: "absolute",
+		backgroundColor: "#95a5a6",
+		marginLeft: 125,
+		marginTop: 85,
+		borderRadius: 5,
+		zIndex: 10,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 5,
+		elevation: 3,
+	},
+	psOptions: {
+		width: 12,
+		height: 25,
+		position: "absolute",
+		backgroundColor: "#95a5a6",
+		marginLeft: 305,
+		marginTop: 85,
+		borderRadius: 5,
+		zIndex: 10,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 5,
+		elevation: 3,
+	},
+	psLeftHand: {
+		width: 120,
+		height: 260,
+		backgroundColor: "#e0e0e0",
+		position: "absolute",
+		left: 0,
+		top: 95,
+		transform: [{ rotate: "11deg" }],
+		borderTopLeftRadius: 30,
+		borderTopRightRadius: 50,
+		borderBottomRightRadius: 50,
+		borderBottomLeftRadius: 50,
+		shadowColor: "#000",
+		shadowOffset: { width: -5, height: 5 },
+		shadowOpacity: 0.4,
+		shadowRadius: 15,
+		elevation: 10,
+		zIndex: 1,
+		paddingTop: 5,
+		paddingLeft: 5,
+	},
+	psRightHand: {
+		width: 120,
+		height: 260,
+		backgroundColor: "#e0e0e0",
+		position: "absolute",
+		left: 330,
+		top: 95,
+		transform: [{ rotate: "-11deg" }],
+		borderTopLeftRadius: 30,
+		borderTopRightRadius: 30,
+		borderBottomRightRadius: 50,
+		borderBottomLeftRadius: 50,
+		shadowColor: "#000",
+		shadowOffset: { width: 5, height: 5 },
+		shadowOpacity: 0.4,
+		shadowRadius: 15,
+		elevation: 10,
+		zIndex: 1,
+		paddingTop: 2,
+		alignItems: "center",
+	},
+	psLeftPad: {
+		backgroundColor: "#c0c0c0",
+		width: 112,
+		height: 112,
+		borderRadius: 56,
+		marginTop: 5,
+		marginLeft: 10,
+		borderWidth: 1,
+		borderColor: "#b0b0b0",
+		position: "relative",
+	},
+	psArrowUp: {
+		width: 22,
+		height: 24,
+		backgroundColor: "#333",
+		position: "absolute",
+		top: 18,
+		left: 40,
+		transform: [{ rotate: "-11deg" }],
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.5,
+		shadowRadius: 5,
+		elevation: 5,
+	},
+	psArrowDown: {
+		width: 22,
+		height: 24,
+		backgroundColor: "#333",
+		position: "absolute",
+		top: 70,
+		left: 50,
+		transform: [{ rotate: "-11deg" }],
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.5,
+		shadowRadius: 5,
+		elevation: 5,
+	},
+	psArrowRight: {
+		width: 24,
+		height: 22,
+		backgroundColor: "#333",
+		position: "absolute",
+		top: 40,
+		left: 72,
+		transform: [{ rotate: "-11deg" }],
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.5,
+		shadowRadius: 5,
+		elevation: 5,
+	},
+	psArrowLeft: {
+		width: 24,
+		height: 22,
+		backgroundColor: "#333",
+		position: "absolute",
+		top: 50,
+		left: 17,
+		transform: [{ rotate: "-11deg" }],
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.5,
+		shadowRadius: 5,
+		elevation: 5,
+	},
+	psRightPad: {
+		backgroundColor: "#c0c0c0",
+		width: 112,
+		height: 112,
+		borderRadius: 56,
+		marginTop: 2,
+		borderWidth: 1,
+		borderColor: "#b0b0b0",
+		position: "relative",
+	},
+	psTriangle: {
+		width: 30,
+		height: 30,
+		position: "absolute",
+		borderRadius: 15,
+		marginTop: 7,
+		marginLeft: 49,
+		backgroundColor: "#e0e0e0",
+		shadowColor: "#000",
+		shadowOffset: { width: 2, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 5,
+		elevation: 3,
+	},
+	psTriangleBas: {
+		width: 22,
+		height: 22,
+		position: "absolute",
+		marginTop: 27,
+		marginLeft: 50,
+		transform: [{ rotate: "11deg" }],
+		borderTopWidth: 3,
+		borderTopColor: "#00c081",
+	},
+	psTriangleDroit: {
+		width: 20,
+		height: 20,
+		position: "absolute",
+		marginTop: 14,
+		marginLeft: 51,
+		transform: [{ rotate: "67deg" }],
+		borderTopWidth: 3,
+		borderTopColor: "#00c081",
+	},
+	psTriangleGauche: {
+		width: 20,
+		height: 20,
+		position: "absolute",
+		marginTop: 15,
+		marginLeft: 56,
+		transform: [{ rotate: "-46deg" }],
+		borderTopWidth: 3,
+		borderTopColor: "#00c081",
+	},
+	psCroix: {
+		width: 30,
+		height: 30,
+		position: "absolute",
+		borderRadius: 15,
+		marginTop: 70,
+		marginLeft: 36,
+		backgroundColor: "#e0e0e0",
+		shadowColor: "#000",
+		shadowOffset: { width: 2, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 5,
+		elevation: 3,
+	},
+	psCroixBleue: {
+		width: 24,
+		height: 24,
+		transform: [{ rotate: "53deg" }],
+		borderRightWidth: 3,
+		borderRightColor: "#0a86e5",
+		marginTop: -7,
+		marginLeft: -4,
+	},
+	psCroixBleue2: {
+		width: 24,
+		height: 24,
+		transform: [{ rotate: "-32deg" }],
+		borderRightWidth: 3,
+		borderRightColor: "#0a86e5",
+		marginTop: -9,
+		marginLeft: -6,
+	},
+	psCarre: {
+		width: 30,
+		height: 30,
+		position: "absolute",
+		borderRadius: 15,
+		marginTop: 32,
+		marginLeft: 10,
+		backgroundColor: "#e0e0e0",
+		shadowColor: "#000",
+		shadowOffset: { width: 2, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 5,
+		elevation: 3,
+	},
+	psCarreRose: {
+		width: 17,
+		height: 17,
+		marginTop: 6,
+		marginLeft: 6,
+		transform: [{ rotate: "11deg" }],
+		borderWidth: 3,
+		borderColor: "#e95ce9",
+	},
+	psRond: {
+		width: 30,
+		height: 30,
+		position: "absolute",
+		borderRadius: 15,
+		marginTop: 44,
+		marginLeft: 74,
+		backgroundColor: "#e0e0e0",
+		shadowColor: "#000",
+		shadowOffset: { width: 2, height: 2 },
+		shadowOpacity: 0.3,
+		shadowRadius: 5,
+		elevation: 3,
+	},
+	psRondRouge: {
+		width: 16,
+		height: 16,
+		borderRadius: 8,
+		transform: [{ rotate: "11deg" }],
+		borderWidth: 3,
+		borderColor: "#ff3746",
+		marginTop: 7,
+		marginLeft: 7,
+	},
+	psRollLeft: {
+		width: 60,
+		height: 60,
+		backgroundColor: "#333",
+		position: "absolute",
+		borderRadius: 40,
+		left: -180,
+		top: 40,
+		zIndex: 5,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 5 },
+		shadowOpacity: 0.5,
+		shadowRadius: 10,
+		elevation: 6,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	psRollRight: {
+		width: 60,
+		height: 60,
+		backgroundColor: "#333",
+		position: "absolute",
+		borderRadius: 40,
+		left: -73,
+		top: 62,
+		zIndex: 5,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 5 },
+		shadowOpacity: 0.5,
+		shadowRadius: 10,
+		elevation: 6,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	psRollIn: {
+		width: 40,
+		height: 40,
+		backgroundColor: "#222",
+		position: "absolute",
+		borderRadius: 30,
+		left: 10,
+		top: 10,
+		borderWidth: 1,
+		borderColor: "#000",
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	psRollInIn: {
+		width: 22,
+		height: 22,
+		backgroundColor: "#6d6d6d",
+		position: "absolute",
+		borderRadius: 22.5,
+		left: 8,
+		top: 8,
+	},
+	psPsButton: {
+		width: 23,
+		height: 23,
+		backgroundColor: "#333",
+		position: "absolute",
+		borderRadius: 11.5,
+		left: -110,
+		top: 85,
+		zIndex: 10,
+		borderWidth: 1,
+		borderColor: "#555",
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 0 },
+		shadowOpacity: 0.5,
+		shadowRadius: 7,
+		elevation: 4,
+	},
+	psActiveButton: {
+		backgroundColor: "#2563eb",
+		borderColor: "#1e3a8a",
+		shadowColor: "#2563eb",
+		shadowOpacity: 0.4,
+		shadowRadius: 6,
+	},
+	psTriangleLineActive: {
+		borderTopColor: "#00f5a8",
+	},
+	psPinkActive: {
+		borderColor: "#d946ef",
+	},
+	psRedActive: {
+		borderColor: "#fb7185",
+	},
+	psCrossLineActive: {
+		borderRightColor: "#2563eb",
+	},
+	psStickPressed: {
+		shadowOpacity: 0.65,
+		shadowRadius: 12,
+	},
+	psStickInnerPressed: {
+		borderColor: "#1e3a8a",
+		shadowColor: "#2563eb",
+		shadowOpacity: 0.45,
+		shadowRadius: 10,
+	},
+	psStickCenterPressed: {
+		borderColor: "#93c5fd",
+		backgroundColor: "#dbeafe",
 	},
 });
