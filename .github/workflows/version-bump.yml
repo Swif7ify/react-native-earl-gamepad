@@ -1,0 +1,73 @@
+name: Manual Version Bump
+
+on:
+    workflow_dispatch:
+        inputs:
+            bump_type:
+                description: "Version bump type"
+                required: true
+                default: "patch"
+                type: choice
+                options:
+                    - patch
+                    - minor
+                    - major
+
+jobs:
+    version-bump:
+        if: github.ref == 'refs/heads/main'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+
+            - name: Configure Git
+              run: |
+                  git config --local user.email "action@github.com"
+                  git config --local user.name "GitHub Action"
+
+            - name: Get current version
+              id: current_version
+              run: |
+                  echo "current_version=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
+
+            - name: Bump version
+              run: |
+                  echo "Current version: ${{ steps.current_version.outputs.current_version }}"
+                  echo "Bumping ${{ github.event.inputs.bump_type }} version..."
+                  npm version ${{ github.event.inputs.bump_type }} --no-git-tag-version
+
+            - name: Get new version
+              id: version
+              run: |
+                  echo "new_version=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
+
+            - name: Commit and push changes
+              run: |
+                  git add package.json package-lock.json
+                  if git diff --cached --quiet; then
+                    echo "No changes to commit"
+                    exit 0
+                  fi
+                  git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+                  git push
+
+            - name: Create summary
+              run: |
+                  echo "## Version Bump Complete" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "**New version:** ${{ steps.version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+                  echo "**Bump type:** ${{ github.event.inputs.bump_type }}" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "The version has been updated and pushed to the repository." >> $GITHUB_STEP_SUMMARY
