@@ -16,9 +16,9 @@ WebView-based gamepad bridge for React Native. Polls `navigator.getGamepads()` i
 ## Install
 
 ```sh
-npm install react-native-earl-gamepad react-native-webview
+npm install react-native-earl-gamepad
 # or
-yarn add react-native-earl-gamepad react-native-webview
+yarn add react-native-earl-gamepad
 ```
 
 ## Usage
@@ -152,6 +152,11 @@ Button names map to the standard gamepad layout (`a`, `b`, `x`, `y`, `lb`, `rb`,
 npm install
 npm run build
 ```
+
+## Troubleshooting
+
+-   **[Invariant Violation: Tried to register two views with the same name RNCWebView]**: Check your `package.json` for multiple instances of `react-native-webview` and uninstall any duplicates.
+    When you install `react-native-earl-gamepad`, `react-native-webview` is already included, so you should not install it separately. or you can check it by running `npm ls react-native-webview`.
 
 Build outputs to `dist/` with type declarations.
 
