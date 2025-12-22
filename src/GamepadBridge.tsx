@@ -1,16 +1,22 @@
-import React, { useMemo } from 'react';
-import { StyleProp, ViewStyle } from 'react-native';
-import WebView, { WebViewMessageEvent } from 'react-native-webview';
-import type { AxisEvent, ButtonEvent, DpadEvent, GamepadMessage, StatusEvent } from './types';
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { StyleProp, ViewStyle } from "react-native";
+import WebView, { WebViewMessageEvent } from "react-native-webview";
+import type {
+	AxisEvent,
+	ButtonEvent,
+	DpadEvent,
+	GamepadMessage,
+	StatusEvent,
+} from "./types";
 
 type Props = {
-    enabled?: boolean;
-    axisThreshold?: number; // deadzone for stick movement
-    onDpad?: (event: DpadEvent) => void; // backward compat convenience
-    onButton?: (event: ButtonEvent) => void;
-    onAxis?: (event: AxisEvent) => void;
-    onStatus?: (event: StatusEvent) => void;
-    style?: StyleProp<ViewStyle>;
+	enabled?: boolean;
+	axisThreshold?: number; // deadzone for stick movement
+	onDpad?: (event: DpadEvent) => void; // backward compat convenience
+	onButton?: (event: ButtonEvent) => void;
+	onAxis?: (event: AxisEvent) => void;
+	onStatus?: (event: StatusEvent) => void;
+	style?: StyleProp<ViewStyle>;
 };
 
 // Minimal HTML bridge that polls navigator.getGamepads and posts button/axis changes.
@@ -107,42 +113,68 @@ const buildBridgeHtml = (axisThreshold: number) => `
 </body></html>`;
 
 export default function GamepadBridge({
-    enabled = true,
-    axisThreshold = 0.15,
-    onDpad,
-    onButton,
-    onAxis,
-    onStatus,
-    style,
+	enabled = true,
+	axisThreshold = 0.15,
+	onDpad,
+	onButton,
+	onAxis,
+	onStatus,
+	style,
 }: Props) {
-    const html = useMemo(() => buildBridgeHtml(axisThreshold), [axisThreshold]);
+	const webviewRef = useRef<WebView>(null);
+	const html = useMemo(() => buildBridgeHtml(axisThreshold), [axisThreshold]);
 
-    if (!enabled) return null;
+	const focusBridge = useCallback(() => {
+		// On Android controllers, ensure the WebView is focusable so DPAD events feed navigator.getGamepads
+		const node = webviewRef.current as unknown as {
+			setNativeProps?: (props: Record<string, unknown>) => void;
+			requestFocus?: () => void;
+		} | null;
+		node?.setNativeProps?.({ focusable: true, focusableInTouchMode: true });
+		node?.requestFocus?.();
+	}, []);
 
-    const handleMessage = (event: WebViewMessageEvent) => {
-        try {
-            const data: GamepadMessage = JSON.parse(event.nativeEvent.data);
-            if (data.type === 'dpad') {
-                onDpad?.(data);
-            } else if (data.type === 'button') {
-                onButton?.(data);
-            } else if (data.type === 'axis') {
-                onAxis?.(data);
-            } else if (data.type === 'status') {
-                onStatus?.(data);
-            }
-        } catch {
-            // ignore malformed messages
-        }
-    };
+	useEffect(() => {
+		if (enabled) focusBridge();
+	}, [enabled, focusBridge]);
 
-    return (
-        <WebView
-            source={{ html }}
-            originWhitelist={['*']}
-            onMessage={handleMessage}
-            javaScriptEnabled
-            style={style ?? { width: 1, height: 1, position: 'absolute', opacity: 0 }}
-        />
-    );
+	if (!enabled) return null;
+
+	const handleMessage = (event: WebViewMessageEvent) => {
+		try {
+			const data: GamepadMessage = JSON.parse(event.nativeEvent.data);
+			if (data.type === "dpad") {
+				onDpad?.(data);
+			} else if (data.type === "button") {
+				onButton?.(data);
+			} else if (data.type === "axis") {
+				onAxis?.(data);
+			} else if (data.type === "status") {
+				onStatus?.(data);
+			}
+		} catch {
+			// ignore malformed messages
+		}
+	};
+
+	return (
+		<WebView
+			ref={webviewRef}
+			source={{ html }}
+			originWhitelist={["*"]}
+			onMessage={handleMessage}
+			javaScriptEnabled
+			onLoad={focusBridge}
+			onLayout={focusBridge}
+			onTouchStart={focusBridge}
+			style={
+				style ?? {
+					width: 1,
+					height: 1,
+					position: "absolute",
+					opacity: 0,
+				}
+			}
+		/>
+	);
 }
