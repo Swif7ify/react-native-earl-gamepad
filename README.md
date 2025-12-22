@@ -1,7 +1,9 @@
 # react-native-earl-gamepad
+![npm](https://img.shields.io/npm/v/react-native-earl-gamepad)
+![downloads](https://img.shields.io/npm/dm/react-native-earl-gamepad)
+![license](https://img.shields.io/npm/l/react-native-earl-gamepad)
 
 WebView-based gamepad bridge for React Native. Polls `navigator.getGamepads()` in a hidden WebView and surfaces buttons, sticks, d-pad, and connection events to JS.
-
 -   Components: `GamepadBridge`, `useGamepad`, and `GamepadDebug`.
 -   Deadzone handling (default `0.15`) with auto-clear on disconnect.
 -   Typed events for buttons, axes, d-pad, and status.
