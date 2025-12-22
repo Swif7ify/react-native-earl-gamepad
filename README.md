@@ -1,9 +1,9 @@
 # react-native-earl-gamepad
 
+![GitHub stars](https://img.shields.io/github/stars/Swif7ify/react-native-earl-gamepad?style=social)
 ![npm](https://img.shields.io/npm/v/react-native-earl-gamepad)
 ![downloads](https://img.shields.io/npm/dm/react-native-earl-gamepad)
 ![license](https://img.shields.io/npm/l/react-native-earl-gamepad)
-![GitHub stars](https://img.shields.io/github/stars/Swif7ify/react-native-earl-gamepad?style=social)
 
 WebView-based gamepad bridge for React Native. Polls `navigator.getGamepads()` in a hidden WebView and surfaces buttons, sticks, d-pad, and connection events to JS.
 
@@ -142,9 +142,9 @@ export function DebugScreen() {
 }
 ```
 
-![Gamepad visual idle](https://github.com/user-attachments/assets/dfebd8c5-7d9a-42c7-802b-2773ec8c8ae9)
-
+![Gamepad visual idle](https://github.com/user-attachments/assets/9d4cbc94-c3aa-434a-99ae-5ea8b01b06e3)
 ![Gamepad visual pressed](https://github.com/user-attachments/assets/7b37d76a-7695-4be9-bda4-7e3d1e6adf41)
+![Gamepad loader](https://github.com/user-attachments/assets/5bb462e5-3259-4680-bfcf-005324ac2aec)
 
 ## API
 
