@@ -132,7 +132,7 @@ export function HUD() {
 
 ### Visual debugger
 
-Drop-in component to see a controller diagram that lights up buttons, shows stick offsets, and lists state.
+Drop-in component to see a controller diagram that lights up buttons, shows stick offsets, and lists state. Shows live metadata (name/vendor/product, mapping, axes/buttons count, vibration support) and includes vibration test buttons plus a loader prompt when no pad is connected.
 
 ```tsx
 import { GamepadDebug } from "react-native-earl-gamepad";
@@ -173,6 +173,9 @@ Return shape:
 -   `buttonValues: Partial<Record<GamepadButtonName, number>>` — last analog value per button (useful for LT/RT triggers).
 -   `isPressed(key: GamepadButtonName): boolean` — helper to check a single button.
 -   `bridge: JSX.Element | null` — render once to enable polling.
+-   `info: GamepadInfo` — metadata for the first controller (id, vendor/product if exposed, mapping, counts, vibration support, timestamp, index).
+-   `vibrate(duration?: number, strength?: number): void` — fire a short rumble when `vibrationActuator` is available.
+-   `stopVibration(): void` — stop an in-flight vibration when supported.
 
 ### `GamepadDebug`
 
