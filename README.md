@@ -1,12 +1,23 @@
 # react-native-earl-gamepad
+
 ![npm](https://img.shields.io/npm/v/react-native-earl-gamepad)
 ![downloads](https://img.shields.io/npm/dm/react-native-earl-gamepad)
 ![license](https://img.shields.io/npm/l/react-native-earl-gamepad)
+![GitHub stars](https://img.shields.io/github/stars/Swif7ify/react-native-earl-gamepad?style=social)
 
 WebView-based gamepad bridge for React Native. Polls `navigator.getGamepads()` in a hidden WebView and surfaces buttons, sticks, d-pad, and connection events to JS.
+
 -   Components: `GamepadBridge`, `useGamepad`, and `GamepadDebug`.
 -   Deadzone handling (default `0.15`) with auto-clear on disconnect.
 -   Typed events for buttons, axes, d-pad, and status.
+
+### Why this?
+
+Native gamepad support in React Native can be flaky or hard to maintain. Instead of relying on old native modules, it uses a hidden WebView to bridge the HTML5 Gamepad API (navigator.getGamepads()) directly to React Native. This ensures much better compatibility across iOS and Android since it relies on the web standard.
+
+### Controller Compatibility
+
+-   Tested with: PS4, and generic Bluetooth controllers. Supports standard mapping.
 
 ## Requirements
 
@@ -121,7 +132,7 @@ export function HUD() {
 
 ### Visual debugger
 
-Drop-in component to see a controller diagram that lights up buttons, shows stick offsets, and lists state.
+Drop-in component to see a controller diagram that lights up buttons, shows stick offsets, and lists state. Shows live metadata (name/vendor/product, mapping, axes/buttons count, vibration support) and includes vibration test buttons plus a loader prompt when no pad is connected.
 
 ```tsx
 import { GamepadDebug } from "react-native-earl-gamepad";
@@ -162,6 +173,9 @@ Return shape:
 -   `buttonValues: Partial<Record<GamepadButtonName, number>>` — last analog value per button (useful for LT/RT triggers).
 -   `isPressed(key: GamepadButtonName): boolean` — helper to check a single button.
 -   `bridge: JSX.Element | null` — render once to enable polling.
+-   `info: GamepadInfo` — metadata for the first controller (id, vendor/product if exposed, mapping, counts, vibration support, timestamp, index).
+-   `vibrate(duration?: number, strength?: number): void` — fire a short rumble when `vibrationActuator` is available.
+-   `stopVibration(): void` — stop an in-flight vibration when supported.
 
 ### `GamepadDebug`
 
@@ -199,12 +213,12 @@ npm install
 npm run build
 ```
 
+Build outputs to `dist/` with type declarations.
+
 ## Troubleshooting
 
 -   **[Invariant Violation: Tried to register two views with the same name RNCWebView]**: Check your `package.json` for multiple instances of `react-native-webview` and uninstall any duplicates.
     When you install `react-native-earl-gamepad`, `react-native-webview` is already included, so you should not install it separately. or you can check it by running `npm ls react-native-webview`.
-
-Build outputs to `dist/` with type declarations.
 
 ## License
 

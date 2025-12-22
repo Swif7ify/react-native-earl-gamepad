@@ -5,9 +5,23 @@ import type {
 	AxisEvent,
 	ButtonEvent,
 	DpadEvent,
+	InfoEvent,
 	GamepadMessage,
 	StatusEvent,
 } from "./types";
+
+type VibrationRequest =
+	| {
+			type: "once";
+			duration: number;
+			strong: number;
+			weak: number;
+			nonce: number;
+	  }
+	| {
+			type: "stop";
+			nonce: number;
+	  };
 
 type Props = {
 	enabled?: boolean;
@@ -16,6 +30,8 @@ type Props = {
 	onButton?: (event: ButtonEvent) => void;
 	onAxis?: (event: AxisEvent) => void;
 	onStatus?: (event: StatusEvent) => void;
+	onInfo?: (event: InfoEvent) => void;
+	vibrationRequest?: VibrationRequest;
 	style?: StyleProp<ViewStyle>;
 };
 
@@ -32,10 +48,69 @@ const buildBridgeHtml = (axisThreshold: number) => `
   const axisNames = ['leftX','leftY','rightX','rightY'];
   let prevButtons = [];
   let prevAxes = [];
+  let prevInfoJson = '';
+
+  function parseVendorProduct(id){
+    const vendorMatch = /Vendor:\s?([0-9a-fA-F]+)/i.exec(id || '') || /VID_([0-9a-fA-F]+)/i.exec(id || '');
+    const productMatch = /Product:\s?([0-9a-fA-F]+)/i.exec(id || '') || /PID_([0-9a-fA-F]+)/i.exec(id || '');
+    return {
+      vendor: vendorMatch ? vendorMatch[1] : null,
+      product: productMatch ? productMatch[1] : null,
+    };
+  }
+
+  function sendInfo(gp){
+    const connected = !!gp;
+    const { vendor, product } = parseVendorProduct(gp?.id || '');
+    const info = {
+      type: 'info',
+      connected,
+      index: gp?.index ?? null,
+      id: gp?.id ?? null,
+      mapping: gp?.mapping ?? null,
+      timestamp: gp?.timestamp ?? null,
+      canVibrate: !!gp?.vibrationActuator,
+      vendor,
+      product,
+      axes: gp?.axes?.length ?? 0,
+      buttons: gp?.buttons?.length ?? 0,
+    };
+    const nextJson = JSON.stringify(info);
+    if (nextJson !== prevInfoJson) {
+      prevInfoJson = nextJson;
+      send(info);
+    }
+  }
+
+  function vibrateOnce(duration, strong, weak){
+    const pad = (navigator.getGamepads && navigator.getGamepads()[0]) || null;
+    if (!pad || !pad.vibrationActuator || !pad.vibrationActuator.playEffect) return;
+    try {
+      pad.vibrationActuator.playEffect('dual-rumble', {
+        duration: duration || 500,
+        strongMagnitude: strong ?? 1,
+        weakMagnitude: weak ?? 1,
+      }).catch(() => {});
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  function stopVibration(){
+    const pad = (navigator.getGamepads && navigator.getGamepads()[0]) || null;
+    if (!pad || !pad.vibrationActuator) return;
+    if (typeof pad.vibrationActuator.reset === 'function') {
+      try { pad.vibrationActuator.reset(); } catch (err) {}
+    }
+  }
+
+  window.__earlVibrateOnce = vibrateOnce;
+  window.__earlStopVibration = stopVibration;
 
   function poll(){
     const pads = (navigator.getGamepads && navigator.getGamepads()) || [];
     const gp = pads[0];
+    sendInfo(gp);
     if (gp) {
       // Buttons
       gp.buttons?.forEach((btn, index) => {
@@ -64,6 +139,8 @@ const buildBridgeHtml = (axisThreshold: number) => `
         prevAxes[index] = value;
       });
     } else {
+      // If no pad, send a single disconnected info payload
+      sendInfo(null);
       if (prevButtons.length) {
         prevButtons.forEach((btn, index) => {
           if (btn?.pressed) {
@@ -119,6 +196,8 @@ export default function GamepadBridge({
 	onButton,
 	onAxis,
 	onStatus,
+	onInfo,
+	vibrationRequest,
 	style,
 }: Props) {
 	const webviewRef = useRef<WebView>(null);
@@ -138,6 +217,25 @@ export default function GamepadBridge({
 		if (enabled) focusBridge();
 	}, [enabled, focusBridge]);
 
+	useEffect(() => {
+		if (!enabled || !vibrationRequest) return;
+		const node = webviewRef.current;
+		if (!node) return;
+		if (vibrationRequest.type === "once") {
+			node.injectJavaScript(
+				`window.__earlVibrateOnce(${Math.max(
+					vibrationRequest.duration,
+					0
+				)}, ${Math.max(
+					Math.min(vibrationRequest.strong, 1),
+					0
+				)}, ${Math.max(Math.min(vibrationRequest.weak, 1), 0)}); true;`
+			);
+		} else {
+			node.injectJavaScript(`window.__earlStopVibration(); true;`);
+		}
+	}, [enabled, vibrationRequest]);
+
 	if (!enabled) return null;
 
 	const handleMessage = (event: WebViewMessageEvent) => {
@@ -151,6 +249,8 @@ export default function GamepadBridge({
 				onAxis?.(data);
 			} else if (data.type === "status") {
 				onStatus?.(data);
+			} else if (data.type === "info") {
+				onInfo?.(data);
 			}
 		} catch {
 			// ignore malformed messages

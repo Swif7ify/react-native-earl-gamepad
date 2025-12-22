@@ -1,5 +1,13 @@
 import React, { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+	ScrollView,
+	StyleSheet,
+	Text,
+	Pressable,
+	ActivityIndicator,
+	View,
+	useWindowDimensions,
+} from "react-native";
 import useGamepad from "./useGamepad";
 import type { GamepadButtonName, StickAxisName } from "./types";
 
@@ -24,6 +32,12 @@ function ControllerVisual({ pressed, axis, value }: ControllerVisualProps) {
 		return Math.max(v, pressed(name) ? 1 : 0);
 	};
 
+	const { width, height } = useWindowDimensions();
+	const isPortrait = height >= width;
+	const containerScaleStyle = isPortrait
+		? { transform: [{ scale: 0.8 }] }
+		: undefined;
+
 	const mix = (a: number, b: number, t: number) =>
 		Math.round(a + (b - a) * t);
 	const stickColor = (mag: number) => {
@@ -44,7 +58,7 @@ function ControllerVisual({ pressed, axis, value }: ControllerVisualProps) {
 
 	return (
 		<View style={styles.psWrapper}>
-			<View style={styles.psContainer}>
+			<View style={[styles.psContainer, containerScaleStyle]}>
 				<View style={styles.psShoulderRow}>
 					<View
 						style={[
@@ -312,7 +326,15 @@ export default function GamepadDebug({
 	enabled = true,
 	axisThreshold = 0.15,
 }: Props) {
-	const { bridge, pressedButtons, axes, buttonValues } = useGamepad({
+	const {
+		bridge,
+		pressedButtons,
+		axes,
+		buttonValues,
+		info,
+		vibrate,
+		stopVibration,
+	} = useGamepad({
 		enabled,
 		axisThreshold,
 	});
@@ -325,6 +347,25 @@ export default function GamepadDebug({
 	const axisValue = (key: StickAxisName) => axes[key] ?? 0;
 	const buttonValue = (key: GamepadButtonName) => buttonValues[key] ?? 0;
 
+	const isConnected = info.connected;
+	const controllerLabel = info.id ?? "No controller detected";
+	const vendorLabel = info.vendor ?? "—";
+	const productLabel = info.product ?? "—";
+	const mappingLabel = info.mapping ?? "unknown";
+	const timestampLabel =
+		info.timestamp != null ? Math.round(info.timestamp).toString() : "—";
+	const infoItems = [
+		{ label: "Name", value: controllerLabel },
+		{ label: "Vendor", value: vendorLabel },
+		{ label: "Product", value: productLabel },
+		{ label: "Mapping", value: mappingLabel },
+		{ label: "Index", value: info.index != null ? `${info.index}` : "—" },
+		{ label: "Axes", value: `${info.axes || 0}` },
+		{ label: "Buttons", value: `${info.buttons || 0}` },
+		{ label: "Vibration", value: info.canVibrate ? "Yes" : "No" },
+		{ label: "Timestamp", value: timestampLabel },
+	];
+
 	return (
 		<View style={styles.container}>
 			<ScrollView
@@ -334,15 +375,105 @@ export default function GamepadDebug({
 				{bridge}
 				<View style={styles.body}>
 					<View style={[styles.card, styles.controllerCard]}>
-						<Text style={styles.cardTitle}>Controller</Text>
+						<View style={styles.statusRow}>
+							<Text style={styles.cardTitle}>Controller</Text>
+							<View
+								style={[
+									styles.statusPill,
+									isConnected
+										? styles.statusPillConnected
+										: styles.statusPillWaiting,
+								]}
+							>
+								<Text style={styles.statusPillText}>
+									{isConnected ? "Connected" : "Waiting"}
+								</Text>
+							</View>
+						</View>
+						<Text style={styles.helperText}>
+							Connect your gamepad and press a button to test.
+						</Text>
+
+						<View style={styles.infoGrid}>
+							{infoItems.map(({ label, value }) => (
+								<View key={label} style={styles.infoItem}>
+									<Text style={styles.infoLabel}>
+										{label}
+									</Text>
+									<Text style={styles.infoValue}>
+										{value}
+									</Text>
+								</View>
+							))}
+						</View>
 
 						<View style={styles.controller}>
+							{!isConnected && (
+								<View style={styles.loaderOverlay}>
+									<ActivityIndicator
+										color="#2563eb"
+										size="small"
+									/>
+									<Text style={styles.loaderText}>
+										Connect your gamepad and press a button
+										to test...
+									</Text>
+								</View>
+							)}
 							<ControllerVisual
 								pressed={pressed}
 								axis={axisValue}
 								value={buttonValue}
 							/>
 						</View>
+
+						<View style={styles.testsRow}>
+							<Pressable
+								style={[
+									styles.button,
+									!info.canVibrate && styles.buttonDisabled,
+								]}
+								onPress={() =>
+									info.canVibrate && vibrate(900, 1)
+								}
+								disabled={!info.canVibrate}
+							>
+								<Text
+									style={[
+										styles.buttonText,
+										!info.canVibrate &&
+											styles.buttonTextDisabled,
+									]}
+								>
+									Vibration, 1 sec
+								</Text>
+							</Pressable>
+							<Pressable
+								style={[
+									styles.button,
+									!info.canVibrate && styles.buttonDisabled,
+								]}
+								onPress={() =>
+									info.canVibrate && stopVibration()
+								}
+								disabled={!info.canVibrate}
+							>
+								<Text
+									style={[
+										styles.buttonText,
+										!info.canVibrate &&
+											styles.buttonTextDisabled,
+									]}
+								>
+									Stop vibration
+								</Text>
+							</Pressable>
+						</View>
+						<Text style={styles.helperTextSmall}>
+							{info.canVibrate
+								? "Uses vibrationActuator when available."
+								: "Vibration not reported by this controller."}
+						</Text>
 					</View>
 
 					<View style={[styles.card, styles.stateCard]}>
@@ -497,6 +628,65 @@ const styles = StyleSheet.create({
 		fontWeight: "700",
 		fontSize: 16,
 	},
+	statusRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		gap: 8,
+	},
+	statusPill: {
+		paddingHorizontal: 10,
+		paddingVertical: 4,
+		borderRadius: 999,
+		borderWidth: 1,
+	},
+	statusPillConnected: {
+		backgroundColor: "#dcfce7",
+		borderColor: "#16a34a",
+	},
+	statusPillWaiting: {
+		backgroundColor: "#fee2e2",
+		borderColor: "#f97316",
+	},
+	statusPillText: {
+		fontSize: 12,
+		fontWeight: "700",
+		color: "#0f172a",
+	},
+	helperText: {
+		color: "#475569",
+		fontSize: 12,
+	},
+	helperTextSmall: {
+		color: "#94a3b8",
+		fontSize: 11,
+	},
+	infoGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: 8,
+	},
+	infoItem: {
+		flexGrow: 1,
+		flexBasis: "45%",
+		minWidth: 140,
+		backgroundColor: "#f8fafc",
+		borderWidth: 1,
+		borderColor: "#e2e8f0",
+		borderRadius: 8,
+		padding: 8,
+		gap: 2,
+	},
+	infoLabel: {
+		color: "#475569",
+		fontSize: 11,
+		fontWeight: "700",
+	},
+	infoValue: {
+		color: "#0f172a",
+		fontSize: 13,
+		fontWeight: "600",
+	},
 	controller: {
 		backgroundColor: "#f8fafc",
 		borderWidth: 1,
@@ -504,6 +694,50 @@ const styles = StyleSheet.create({
 		padding: 12,
 		alignItems: "center",
 		justifyContent: "center",
+		position: "relative",
+		overflow: "hidden",
+	},
+	loaderOverlay: {
+		position: "absolute",
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		backgroundColor: "rgba(255,255,255,0.92)",
+		alignItems: "center",
+		justifyContent: "center",
+		padding: 12,
+		gap: 6,
+		zIndex: 50,
+	},
+	loaderText: {
+		color: "#0f172a",
+		fontSize: 12,
+		textAlign: "center",
+	},
+	testsRow: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: 8,
+	},
+	button: {
+		backgroundColor: "#2563eb",
+		paddingVertical: 10,
+		paddingHorizontal: 12,
+		borderRadius: 8,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	buttonDisabled: {
+		backgroundColor: "#cbd5e1",
+	},
+	buttonText: {
+		color: "#f8fafc",
+		fontWeight: "700",
+		fontSize: 13,
+	},
+	buttonTextDisabled: {
+		color: "#475569",
 	},
 	axesGrid: {
 		flexDirection: "row",
@@ -567,7 +801,7 @@ const styles = StyleSheet.create({
 		width: 395,
 		height: 160,
 		backgroundColor: "#e0e0e0",
-		marginLeft: 27,
+		marginLeft: 50, // 27
 		borderRadius: 25,
 		position: "absolute",
 		zIndex: 0,
@@ -577,7 +811,7 @@ const styles = StyleSheet.create({
 		width: 150,
 		height: 80,
 		backgroundColor: "#333",
-		marginLeft: 147,
+		marginLeft: 170,
 		borderRadius: 7,
 		position: "absolute",
 		zIndex: 10,
@@ -593,7 +827,7 @@ const styles = StyleSheet.create({
 		height: 25,
 		position: "absolute",
 		backgroundColor: "#95a5a6",
-		marginLeft: 125,
+		marginLeft: 148,
 		marginTop: 85,
 		borderRadius: 5,
 		zIndex: 10,
@@ -608,7 +842,7 @@ const styles = StyleSheet.create({
 		height: 25,
 		position: "absolute",
 		backgroundColor: "#95a5a6",
-		marginLeft: 305,
+		marginLeft: 327,
 		marginTop: 85,
 		borderRadius: 5,
 		zIndex: 10,
@@ -623,7 +857,7 @@ const styles = StyleSheet.create({
 		height: 260,
 		backgroundColor: "#e0e0e0",
 		position: "absolute",
-		left: 0,
+		left: 23,
 		top: 95,
 		transform: [{ rotate: "11deg" }],
 		borderTopLeftRadius: 30,
@@ -644,7 +878,7 @@ const styles = StyleSheet.create({
 		height: 260,
 		backgroundColor: "#e0e0e0",
 		position: "absolute",
-		left: 330,
+		left: 353,
 		top: 95,
 		transform: [{ rotate: "-11deg" }],
 		borderTopLeftRadius: 30,
@@ -666,7 +900,7 @@ const styles = StyleSheet.create({
 		height: 112,
 		borderRadius: 56,
 		marginTop: 5,
-		marginLeft: 10,
+		marginLeft: 0,
 		borderWidth: 1,
 		borderColor: "#b0b0b0",
 		position: "relative",
@@ -732,7 +966,7 @@ const styles = StyleSheet.create({
 		width: 112,
 		height: 112,
 		borderRadius: 56,
-		marginTop: 2,
+		marginTop: 4,
 		borderWidth: 1,
 		borderColor: "#b0b0b0",
 		position: "relative",
