@@ -45,6 +45,50 @@ export function Controls() {
 }
 ```
 
+### Control Logic Example
+
+Here is an example of mapping D-pad events to movement vectors
+
+```tsx
+import { useState, useCallback } from "react";
+import { GamepadBridge, type DpadEvent } from "react-native-earl-gamepad";
+type MoveKey = keyof typeof MOVES;
+
+const MOVES: Record<string, [number, number]> = {
+	up: [1, 0],
+	down: [-1, 0],
+	right: [0, 1],
+	left: [0, -1],
+	stop: [0, 0],
+
+	axis_left_x_neg: [0, -1],
+	axis_left_x_pos: [0, 1],
+	axis_left_y_pos: [1, 0],
+	axis_left_y_neg: [-1, 0],
+
+	// add more
+}; // example only for the control logic
+
+export function Controls() {
+	const [active, setActive] = useState<string | null>(null);
+
+	const handleDpad = useCallback(
+		(event: DpadEvent) => {
+			const key = event.key as MoveKey;
+			if (event.pressed) {
+				if (active !== key) {
+					console.log("Dpad press", key);
+				}
+			} else if (active === key) {
+				// do something
+			}
+		},
+		[active]
+	);
+	return <GamepadBridge enabled onDpad={handleDpad} axisThreshold={0.15} />;
+}
+```
+
 ### Hook for stateful consumption
 
 `useGamepad` keeps pressed state and axes for you. You still need to render the provided `bridge` element once.
