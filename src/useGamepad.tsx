@@ -15,6 +15,7 @@ import type {
 	GamepadInfo,
 	StickAxisName,
 	InfoEvent,
+	StateEvent,
 	StatusEvent,
 } from "./types";
 
@@ -86,6 +87,14 @@ export default function useGamepad({
 	>(null);
 	const vibrationNonce = useRef(0);
 
+	const resetState = useCallback(() => {
+		const cleared = new Set<GamepadButtonName>();
+		pressedRef.current = cleared;
+		setPressedButtons(cleared);
+		setButtonValues({});
+		setAxes({ leftX: 0, leftY: 0, rightX: 0, rightY: 0 });
+	}, []);
+
 	useEffect(() => {
 		pressedRef.current = pressedButtons;
 	}, [pressedButtons]);
@@ -126,15 +135,27 @@ export default function useGamepad({
 
 	const handleInfo = useCallback(
 		(event: InfoEvent) => {
+			if (!event.connected) {
+				resetState();
+			}
 			setInfo(event);
 			onInfo?.(event);
 		},
-		[onInfo]
+		[onInfo, resetState]
 	);
+
+	const handleState = useCallback((event: StateEvent) => {
+		const next = new Set(event.pressed);
+		pressedRef.current = next;
+		setPressedButtons(next);
+		setButtonValues(event.values ?? {});
+		setAxes(event.axes ?? {});
+	}, []);
 
 	const handleStatus = useCallback(
 		(event: StatusEvent) => {
 			if (event.state === "disconnected") {
+				resetState();
 				setInfo((prev) => ({
 					...prev,
 					connected: false,
@@ -142,7 +163,7 @@ export default function useGamepad({
 			}
 			onStatus?.(event);
 		},
-		[onStatus]
+		[onStatus, resetState]
 	);
 
 	const vibrate = useCallback((duration = 800, strength = 1) => {
@@ -163,19 +184,14 @@ export default function useGamepad({
 	}, []);
 
 	useEffect(() => {
-		if (!enabled && pressedRef.current.size) {
-			pressedRef.current = new Set();
-			setPressedButtons(new Set());
-		}
 		if (!enabled) {
-			setAxes({ leftX: 0, leftY: 0, rightX: 0, rightY: 0 });
-			setButtonValues({});
+			resetState();
 			setInfo((prev) => ({
 				...prev,
 				connected: false,
 			}));
 		}
-	}, [enabled]);
+	}, [enabled, resetState]);
 
 	const bridge = useMemo(
 		() => (
@@ -187,6 +203,7 @@ export default function useGamepad({
 				onAxis={handleAxis}
 				onStatus={handleStatus}
 				onInfo={handleInfo}
+				onState={handleState}
 				vibrationRequest={vibrationRequest ?? undefined}
 			/>
 		),
@@ -198,6 +215,7 @@ export default function useGamepad({
 			handleDpad,
 			handleInfo,
 			handleStatus,
+			handleState,
 			vibrationRequest,
 		]
 	);

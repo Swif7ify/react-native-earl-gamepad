@@ -5,11 +5,11 @@
 ![downloads](https://img.shields.io/npm/dm/react-native-earl-gamepad)
 ![license](https://img.shields.io/npm/l/react-native-earl-gamepad)
 
-WebView-based gamepad bridge for React Native. Polls `navigator.getGamepads()` in a hidden WebView and surfaces buttons, sticks, d-pad, and connection events to JS.
+WebView-based gamepad bridge for React Native. Polls `navigator.getGamepads()` in a hidden WebView and surfaces buttons, sticks, d-pad, touchpad click, and connection events to JS.
 
 -   Components: `GamepadBridge`, `useGamepad`, and `GamepadDebug`.
--   Deadzone handling (default `0.15`) with auto-clear on disconnect.
--   Typed events for buttons, axes, d-pad, and status.
+-   Deadzone handling (default `0.15`) with auto-clear on disconnect and live state snapshots to avoid stuck buttons.
+-   Typed events for buttons, axes, d-pad, touchpad click, status, and a full-state snapshot.
 
 ### Why this?
 
@@ -134,6 +134,11 @@ export function HUD() {
 
 Drop-in component to see a controller diagram that lights up buttons, shows stick offsets, and lists state. Shows live metadata (name/vendor/product, mapping, axes/buttons count, vibration support) and includes vibration test buttons plus a loader prompt when no pad is connected.
 
+The State panel includes:
+
+-   Per-stick plots (left/right) with axis values, crosshairs, and a dashed trace from center to the current dot.
+-   Touchpad click indicator (PS touchpad click is mapped to `touchpad`; position is not exposed by the Gamepad API).
+
 ```tsx
 import { GamepadDebug } from "react-native-earl-gamepad";
 
@@ -142,9 +147,9 @@ export function DebugScreen() {
 }
 ```
 
-![Gamepad visual idle](https://github.com/user-attachments/assets/9d4cbc94-c3aa-434a-99ae-5ea8b01b06e3)
-![Gamepad visual pressed](https://github.com/user-attachments/assets/7b37d76a-7695-4be9-bda4-7e3d1e6adf41)
-![Gamepad loader](https://github.com/user-attachments/assets/5bb462e5-3259-4680-bfcf-005324ac2aec)
+![Gamepad visual idle](https://github.com/user-attachments/assets/ae29d0a9-ded5-4b2d-96f8-f432f99cb54c)
+![Gamepad visual pressed](https://github.com/user-attachments/assets/830323aa-0f6c-4ee4-a276-663a421b9697)
+![Gamepad Idle](https://github.com/user-attachments/assets/206fe108-8ec3-40cb-a64b-de058d07672f)
 
 ## API
 
@@ -156,6 +161,7 @@ export function DebugScreen() {
 -   `onAxis?: (event: AxisEvent) => void` — fired when an axis changes beyond threshold.
 -   `onDpad?: (event: DpadEvent) => void` — convenience mapping of button indices 12–15.
 -   `onStatus?: (event: StatusEvent) => void` — `connected` / `disconnected` events.
+-   `onState?: (event: StateEvent) => void` — full snapshot of pressed buttons, values, and axes each poll.
 -   `style?: StyleProp<ViewStyle>` — override container; default is a 1×1 transparent view.
 
 ### `useGamepad` options and return
@@ -188,6 +194,8 @@ Return shape:
 -   `AxisEvent`: `{ type: 'axis'; axis: StickAxisName; index: number; value: number }`
 -   `DpadEvent`: `{ type: 'dpad'; key: 'up' | 'down' | 'left' | 'right'; pressed: boolean }`
 -   `StatusEvent`: `{ type: 'status'; state: 'connected' | 'disconnected' }`
+-   `InfoEvent`: controller metadata payload (name/vendor/product, mapping, counts, vibration capability, timestamp, index, etc.)
+-   `StateEvent`: `{ type: 'state'; pressed: GamepadButtonName[]; values: Record<GamepadButtonName, number>; axes: Record<StickAxisName, number> }`
 
 Button names map to the standard gamepad layout (`a`, `b`, `x`, `y`, `lb`, `rb`, `lt`, `rt`, `back`, `start`, `ls`, `rs`, `dpadUp`, `dpadDown`, `dpadLeft`, `dpadRight`, `home`). Unknown indices fall back to `button-N`. Axes map to `leftX`, `leftY`, `rightX`, `rightY` with fallbacks `axis-N`.
 

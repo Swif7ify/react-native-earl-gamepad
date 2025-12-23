@@ -6,6 +6,7 @@ import type {
 	ButtonEvent,
 	DpadEvent,
 	InfoEvent,
+	StateEvent,
 	GamepadMessage,
 	StatusEvent,
 } from "./types";
@@ -31,6 +32,7 @@ type Props = {
 	onAxis?: (event: AxisEvent) => void;
 	onStatus?: (event: StatusEvent) => void;
 	onInfo?: (event: InfoEvent) => void;
+	onState?: (event: StateEvent) => void;
 	vibrationRequest?: VibrationRequest;
 	style?: StyleProp<ViewStyle>;
 };
@@ -44,7 +46,7 @@ const buildBridgeHtml = (axisThreshold: number) => `
 (function(){
   const deadzone = ${axisThreshold.toFixed(2)};
   const send = (data) => window.ReactNativeWebView.postMessage(JSON.stringify(data));
-  const buttonNames = ['a','b','x','y','lb','rb','lt','rt','back','start','ls','rs','dpadUp','dpadDown','dpadLeft','dpadRight','home'];
+  const buttonNames = ['a','b','x','y','lb','rb','lt','rt','back','start','ls','rs','dpadUp','dpadDown','dpadLeft','dpadRight','home','touchpad'];
   const axisNames = ['leftX','leftY','rightX','rightY'];
   let prevButtons = [];
   let prevAxes = [];
@@ -107,14 +109,24 @@ const buildBridgeHtml = (axisThreshold: number) => `
   window.__earlVibrateOnce = vibrateOnce;
   window.__earlStopVibration = stopVibration;
 
+  const nameForIndex = (index) => {
+    if (buttonNames[index]) return buttonNames[index];
+    if (index === 16) return 'home';
+    if (index === 17) return 'touchpad';
+    return 'button-' + index;
+  };
+
   function poll(){
     const pads = (navigator.getGamepads && navigator.getGamepads()) || [];
     const gp = pads[0];
     sendInfo(gp);
     if (gp) {
+      const pressedNow = [];
+      const valueMap = {};
+      const axesState = {};
       // Buttons
       gp.buttons?.forEach((btn, index) => {
-        const name = buttonNames[index] || ('button-' + index);
+        const name = nameForIndex(index);
         const prevBtn = prevButtons[index] || { pressed:false, value:0 };
         const changed = prevBtn.pressed !== btn.pressed || Math.abs(prevBtn.value - btn.value) > 0.01;
         if (changed) {
@@ -125,6 +137,8 @@ const buildBridgeHtml = (axisThreshold: number) => `
           if (index === 14) send({ type:'dpad', key:'left', pressed: !!btn.pressed });
           if (index === 15) send({ type:'dpad', key:'right', pressed: !!btn.pressed });
         }
+        if (btn?.pressed) pressedNow.push(name);
+        valueMap[name] = btn?.value ?? 0;
         prevButtons[index] = { pressed: !!btn.pressed, value: btn.value ?? 0 };
       });
 
@@ -136,15 +150,18 @@ const buildBridgeHtml = (axisThreshold: number) => `
         if (Math.abs(prevVal - value) > 0.01) {
           send({ type:'axis', axis:name, index, value });
         }
+        axesState[name] = value;
         prevAxes[index] = value;
       });
+
+      send({ type:'state', pressed: pressedNow, values: valueMap, axes: axesState });
     } else {
       // If no pad, send a single disconnected info payload
       sendInfo(null);
       if (prevButtons.length) {
         prevButtons.forEach((btn, index) => {
           if (btn?.pressed) {
-            const name = buttonNames[index] || ('button-' + index);
+            const name = nameForIndex(index);
             send({ type:'button', button:name, index, pressed:false, value:0 });
             if (index === 12) send({ type:'dpad', key:'up', pressed:false });
             if (index === 13) send({ type:'dpad', key:'down', pressed:false });
@@ -163,6 +180,7 @@ const buildBridgeHtml = (axisThreshold: number) => `
         });
         prevAxes = [];
       }
+      send({ type:'state', pressed: [], values: {}, axes: {} });
     }
     requestAnimationFrame(poll);
   }
@@ -197,6 +215,7 @@ export default function GamepadBridge({
 	onAxis,
 	onStatus,
 	onInfo,
+	onState,
 	vibrationRequest,
 	style,
 }: Props) {
@@ -251,6 +270,8 @@ export default function GamepadBridge({
 				onStatus?.(data);
 			} else if (data.type === "info") {
 				onInfo?.(data);
+			} else if (data.type === "state") {
+				onState?.(data);
 			}
 		} catch {
 			// ignore malformed messages

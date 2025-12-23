@@ -18,6 +18,7 @@ export type GamepadButtonName =
 	| "dpadLeft"
 	| "dpadRight"
 	| "home"
+	| "touchpad"
 	| `button-${number}`;
 
 export type StickAxisName =
@@ -65,6 +66,13 @@ export type InfoEvent = GamepadInfo & {
 	type: "info";
 };
 
+export type StateEvent = {
+	type: "state";
+	pressed: GamepadButtonName[];
+	values: Partial<Record<GamepadButtonName, number>>;
+	axes: Partial<Record<StickAxisName, number>>;
+};
+
 export type StatusEvent = {
 	type: "status";
 	state: "connected" | "disconnected";
@@ -75,4 +83,5 @@ export type GamepadMessage =
 	| ButtonEvent
 	| AxisEvent
 	| StatusEvent
-	| InfoEvent;
+	| InfoEvent
+	| StateEvent;
