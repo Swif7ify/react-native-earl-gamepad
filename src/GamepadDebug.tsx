@@ -35,7 +35,7 @@ function ControllerVisual({ pressed, axis, value }: ControllerVisualProps) {
 	const { width, height } = useWindowDimensions();
 	const isPortrait = height >= width;
 	const containerScaleStyle = isPortrait
-		? { transform: [{ scale: 0.8 }] }
+		? { transform: [{ scale: 0.7 }] }
 		: undefined;
 
 	const mix = (a: number, b: number, t: number) =>
@@ -131,7 +131,12 @@ function ControllerVisual({ pressed, axis, value }: ControllerVisualProps) {
 				</View>
 
 				<View style={styles.psMiddle} />
-				<View style={styles.psPaveTactile} />
+				<View
+					style={[
+						styles.psPaveTactile,
+						pressed("touchpad") && styles.psPaveTactileActive,
+					]}
+				/>
 				<View
 					style={[
 						styles.psShare,
@@ -262,7 +267,7 @@ function ControllerVisual({ pressed, axis, value }: ControllerVisualProps) {
 								{
 									transform: [
 										{ translateX: axis("leftX") * 6 },
-										{ translateY: axis("leftY") * -6 },
+										{ translateY: axis("leftY") * 6 },
 									],
 									backgroundColor: stickColor(leftMag),
 								},
@@ -299,7 +304,7 @@ function ControllerVisual({ pressed, axis, value }: ControllerVisualProps) {
 								{
 									transform: [
 										{ translateX: axis("rightX") * 6 },
-										{ translateY: axis("rightY") * -6 },
+										{ translateY: axis("rightY") * 6 },
 									],
 									backgroundColor: stickColor(rightMag),
 								},
@@ -821,6 +826,12 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.5,
 		shadowRadius: 10,
 		elevation: 5,
+	},
+	psPaveTactileActive: {
+		backgroundColor: "#2563eb",
+		shadowColor: "#2563eb",
+		shadowOpacity: 0.65,
+		shadowRadius: 12,
 	},
 	psShare: {
 		width: 12,
