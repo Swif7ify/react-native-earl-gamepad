@@ -1,6 +1,6 @@
 {
 	"name": "react-native-earl-gamepad",
-	"version": "0.7.1",
+	"version": "0.7.2",
 	"description": "React Native gamepad bridge via WebView (buttons, sticks, d-pad, status).",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
