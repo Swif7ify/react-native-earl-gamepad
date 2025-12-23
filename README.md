@@ -158,7 +158,16 @@ https://github.com/user-attachments/assets/6b073b65-9585-4168-8c2c-7ef06a7cf03a
 
 https://github.com/user-attachments/assets/b5a9d422-b143-4887-9a64-fb41edee731f
 
-
+## Example
+### Basic Game Showcasing `react-native-earl-gamepad`
+[Github Repository Basic Game](https://github.com/Swif7ify/react-native-earl-gamepad-example)
+```sh
+# external repo
+git clone https://github.com/Swif7ify/react-native-earl-gamepad-example
+cd react-native-earl-gamepad-example
+npm install
+npx expo start
+```
 
 ## API
 
