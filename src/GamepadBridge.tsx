@@ -109,6 +109,13 @@ const buildBridgeHtml = (axisThreshold: number) => `
   window.__earlVibrateOnce = vibrateOnce;
   window.__earlStopVibration = stopVibration;
 
+  const nameForIndex = (index) => {
+    if (buttonNames[index]) return buttonNames[index];
+    if (index === 16) return 'home';
+    if (index === 17) return 'touchpad';
+    return 'button-' + index;
+  };
+
   function poll(){
     const pads = (navigator.getGamepads && navigator.getGamepads()) || [];
     const gp = pads[0];
@@ -119,7 +126,7 @@ const buildBridgeHtml = (axisThreshold: number) => `
       const axesState = {};
       // Buttons
       gp.buttons?.forEach((btn, index) => {
-        const name = buttonNames[index] || ('button-' + index);
+        const name = nameForIndex(index);
         const prevBtn = prevButtons[index] || { pressed:false, value:0 };
         const changed = prevBtn.pressed !== btn.pressed || Math.abs(prevBtn.value - btn.value) > 0.01;
         if (changed) {
@@ -154,7 +161,7 @@ const buildBridgeHtml = (axisThreshold: number) => `
       if (prevButtons.length) {
         prevButtons.forEach((btn, index) => {
           if (btn?.pressed) {
-            const name = buttonNames[index] || ('button-' + index);
+            const name = nameForIndex(index);
             send({ type:'button', button:name, index, pressed:false, value:0 });
             if (index === 12) send({ type:'dpad', key:'up', pressed:false });
             if (index === 13) send({ type:'dpad', key:'down', pressed:false });

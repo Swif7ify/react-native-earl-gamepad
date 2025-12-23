@@ -351,6 +351,80 @@ export default function GamepadDebug({
 	const pressed = (key: GamepadButtonName) => pressedButtons.has(key);
 	const axisValue = (key: StickAxisName) => axes[key] ?? 0;
 	const buttonValue = (key: GamepadButtonName) => buttonValues[key] ?? 0;
+	const touchpadPressed = pressed("touchpad");
+
+	const renderStickCard = (
+		title: string,
+		xLabel: string,
+		yLabel: string,
+		x: number,
+		y: number
+	) => (
+		<View style={styles.stickCard}>
+			<Text style={styles.stickTitle}>{title}</Text>
+			<View style={styles.stickContent}>
+				<View style={styles.stickAxesList}>
+					<View style={styles.stickAxisRow}>
+						<Text style={styles.stickAxisLabel}>{xLabel}</Text>
+						<Text style={styles.stickAxisValue}>{format(x)}</Text>
+					</View>
+					<View style={styles.stickAxisRow}>
+						<Text style={styles.stickAxisLabel}>{yLabel}</Text>
+						<Text style={styles.stickAxisValue}>{format(y)}</Text>
+					</View>
+				</View>
+				<View style={styles.stickPlot}>
+					{(() => {
+						const radius = 44;
+						const dotX = x * radius;
+						const dotY = y * radius;
+						const distance = Math.hypot(dotX, dotY);
+						const hasMovement = distance > 1;
+						return (
+							<View style={styles.stickCircle}>
+								<View style={styles.stickCrosshairH} />
+								<View style={styles.stickCrosshairV} />
+								{hasMovement && (
+									<View
+										style={[
+											styles.stickGuideDiag,
+											{
+												width: distance,
+												left: 55,
+												top: 55,
+												transform: [
+													{
+														rotate: `${
+															Math.atan2(
+																dotY,
+																dotX
+															) *
+															(180 / Math.PI)
+														}deg`,
+													},
+												],
+											},
+										]}
+									/>
+								)}
+								<View
+									style={[
+										styles.stickDot,
+										{
+											transform: [
+												{ translateX: dotX },
+												{ translateY: dotY },
+											],
+										},
+									]}
+								/>
+							</View>
+						);
+					})()}
+				</View>
+			</View>
+		</View>
+	);
 
 	const isConnected = info.connected;
 	const controllerLabel = info.id ?? "No controller detected";
@@ -432,53 +506,36 @@ export default function GamepadDebug({
 							/>
 						</View>
 
-						<View style={styles.testsRow}>
-							<Pressable
-								style={[
-									styles.button,
-									!info.canVibrate && styles.buttonDisabled,
-								]}
-								onPress={() =>
-									info.canVibrate && vibrate(900, 1)
-								}
-								disabled={!info.canVibrate}
-							>
-								<Text
-									style={[
-										styles.buttonText,
-										!info.canVibrate &&
-											styles.buttonTextDisabled,
-									]}
-								>
-									Vibration, 1 sec
+						{info.canVibrate && (
+							<>
+								<View style={styles.testsRow}>
+									<Pressable
+										style={styles.button}
+										onPress={() => vibrate(900, 1)}
+									>
+										<Text style={styles.buttonText}>
+											Vibration, 1 sec
+										</Text>
+									</Pressable>
+									<Pressable
+										style={styles.button}
+										onPress={stopVibration}
+									>
+										<Text style={styles.buttonText}>
+											Stop vibration
+										</Text>
+									</Pressable>
+								</View>
+								<Text style={styles.helperTextSmall}>
+									Uses vibrationActuator when available.
 								</Text>
-							</Pressable>
-							<Pressable
-								style={[
-									styles.button,
-									!info.canVibrate && styles.buttonDisabled,
-								]}
-								onPress={() =>
-									info.canVibrate && stopVibration()
-								}
-								disabled={!info.canVibrate}
-							>
-								<Text
-									style={[
-										styles.buttonText,
-										!info.canVibrate &&
-											styles.buttonTextDisabled,
-									]}
-								>
-									Stop vibration
-								</Text>
-							</Pressable>
-						</View>
-						<Text style={styles.helperTextSmall}>
-							{info.canVibrate
-								? "Uses vibrationActuator when available."
-								: "Vibration not reported by this controller."}
-						</Text>
+							</>
+						)}
+						{!info.canVibrate && (
+							<Text style={styles.helperTextSmall}>
+								Vibration not reported by this controller.
+							</Text>
+						)}
 					</View>
 
 					<View style={[styles.card, styles.stateCard]}>
@@ -500,17 +557,21 @@ export default function GamepadDebug({
 						</View>
 
 						<Text style={styles.sectionTitle}>Axes</Text>
-						<View style={styles.axesGrid}>
-							{trackedAxes.map((axisName) => (
-								<View key={axisName} style={styles.axisItem}>
-									<Text style={styles.axisLabel}>
-										{axisName}
-									</Text>
-									<Text style={styles.axisValue}>
-										{format(axes[axisName])}
-									</Text>
-								</View>
-							))}
+						<View style={styles.stickGrid}>
+							{renderStickCard(
+								"L STICK",
+								"Axis 0 (leftX)",
+								"Axis 1 (leftY)",
+								axisValue("leftX"),
+								axisValue("leftY")
+							)}
+							{renderStickCard(
+								"R STICK",
+								"Axis 2 (rightX)",
+								"Axis 3 (rightY)",
+								axisValue("rightX"),
+								axisValue("rightY")
+							)}
 						</View>
 					</View>
 				</View>
@@ -605,6 +666,106 @@ const styles = StyleSheet.create({
 		color: "#0f172a",
 		fontSize: 16,
 		fontVariant: ["tabular-nums"],
+	},
+	stickGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: 10,
+	},
+	stickCard: {
+		flexGrow: 1,
+		flexBasis: "48%",
+		minWidth: 240,
+		backgroundColor: "#f8fafc",
+		borderWidth: 1,
+		borderColor: "#cbd5e1",
+		borderRadius: 10,
+		padding: 10,
+		gap: 10,
+	},
+	stickTitle: {
+		color: "#475569",
+		fontSize: 12,
+		fontWeight: "700",
+		letterSpacing: 0.3,
+	},
+	stickContent: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		gap: 12,
+	},
+	stickAxesList: {
+		gap: 6,
+	},
+	stickAxisRow: {
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "center",
+		gap: 8,
+	},
+	stickAxisLabel: {
+		color: "#475569",
+		fontSize: 12,
+		fontWeight: "600",
+	},
+	stickAxisValue: {
+		color: "#0f172a",
+		fontSize: 16,
+		fontWeight: "700",
+		fontVariant: ["tabular-nums"],
+	},
+	stickPlot: {
+		width: 120,
+		height: 120,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	stickCircle: {
+		width: 110,
+		height: 110,
+		borderRadius: 55,
+		borderWidth: 1,
+		borderColor: "#cbd5e1",
+		backgroundColor: "#fff",
+		alignItems: "center",
+		justifyContent: "center",
+		position: "relative",
+	},
+	stickCrosshairH: {
+		position: "absolute",
+		left: 5,
+		right: 5,
+		top: 55,
+		height: 1,
+		backgroundColor: "#e2e8f0",
+	},
+	stickCrosshairV: {
+		position: "absolute",
+		top: 5,
+		bottom: 5,
+		left: 55,
+		width: 1,
+		backgroundColor: "#e2e8f0",
+	},
+	stickGuideDiag: {
+		position: "absolute",
+		height: 0,
+		borderTopWidth: 1,
+		borderColor: "#94a3b8",
+		borderStyle: "dashed",
+		transformOrigin: "left center",
+	},
+	stickDot: {
+		width: 10,
+		height: 10,
+		borderRadius: 5,
+		backgroundColor: "#1d4ed8",
+		position: "absolute",
+		top: 55,
+		left: 55,
+		marginLeft: -5,
+		marginTop: -5,
 	},
 	body: {
 		flexDirection: "row",
