@@ -153,6 +153,13 @@ export function DebugScreen() {
 
 ## Demo
 
+https://github.com/user-attachments/assets/6b073b65-9585-4168-8c2c-7ef06a7cf03a
+
+
+https://github.com/user-attachments/assets/b5a9d422-b143-4887-9a64-fb41edee731f
+
+
+
 ## API
 
 ### `GamepadBridge` props
