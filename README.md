@@ -151,6 +151,8 @@ export function DebugScreen() {
 ![Gamepad visual pressed](https://github.com/user-attachments/assets/830323aa-0f6c-4ee4-a276-663a421b9697)
 ![Gamepad Idle](https://github.com/user-attachments/assets/206fe108-8ec3-40cb-a64b-de058d07672f)
 
+## Demo
+
 ## API
 
 ### `GamepadBridge` props
@@ -207,6 +209,13 @@ Button names map to the standard gamepad layout (`a`, `b`, `x`, `y`, `lb`, `rb`,
 -   Keep the bridge mounted; remounting clears internal state and can drop transient events.
 -   Axis values below the deadzone are coerced to `0`. Adjust `axisThreshold` if you need more sensitivity.
 -   LT/RT expose analog values via `buttonValues.lt` and `buttonValues.rt`.
+
+## Performance tips
+
+-   For movement/game loops in your app, prefer `requestAnimationFrame` over `setInterval` to avoid jitter from timer drift.
+-   Skip game loop work when no controller is connected (use `onStatus` or the hook’s `info.connected`).
+-   If you need to lower CPU/GPU cost, you can poll at a fixed interval inside your app logic (e.g., 45–60 fps) while the bridge keeps its internal rAF poll for accurate state.
+-   Avoid remounting the bridge; mount once near the root and let `enabled` toggle collection if you must pause.
 
 ## Patterns
 
