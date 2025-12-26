@@ -39,5 +39,9 @@
 	},
 	"homepage": "https://github.com/Swif7ify/react-native-earl-gamepad#readme",
 	"author": "Ordovez, Earl Romeo",
-	"license": "MIT"
+	"license": "MIT",
+	"funding": {
+		"type": "github",
+		"url": "https://github.com/sponsors/Swif7ify"
+	}
 }

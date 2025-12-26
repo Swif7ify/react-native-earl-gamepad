@@ -256,3 +256,9 @@ Build outputs to `dist/` with type declarations.
 ## License
 
 MIT
+
+## ❤️ Sponsor
+
+If this project helps you, consider sponsoring its development:
+
+👉 https://github.com/sponsors/Swif7ify
