@@ -155,12 +155,14 @@ export function DebugScreen() {
 
 https://github.com/user-attachments/assets/6b073b65-9585-4168-8c2c-7ef06a7cf03a
 
-
 https://github.com/user-attachments/assets/b5a9d422-b143-4887-9a64-fb41edee731f
 
 ## Example
+
 ### Basic Game Showcasing `react-native-earl-gamepad`
+
 [Github Repository Basic Game](https://github.com/Swif7ify/react-native-earl-gamepad-example)
+
 ```sh
 # external repo
 git clone https://github.com/Swif7ify/react-native-earl-gamepad-example
@@ -252,6 +254,7 @@ Build outputs to `dist/` with type declarations.
 
 -   **[Invariant Violation: Tried to register two views with the same name RNCWebView]**: Check your `package.json` for multiple instances of `react-native-webview` and uninstall any duplicates.
     When you install `react-native-earl-gamepad`, `react-native-webview` is already included, so you should not install it separately. or you can check it by running `npm ls react-native-webview`.
+-   **Gamepad not focusing on the app**: Ensure that your styles do not hide the `GamepadBridge` (e.g., `display: 'none'`), as this may prevent the WebView from receiving gamepad input. You can use `opacity: 0` or `width: 0, height: 0` instead.
 
 ## License
 
