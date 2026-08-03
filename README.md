@@ -17,7 +17,12 @@ Native gamepad support in React Native can be flaky or hard to maintain. Instead
 
 ### Controller Compatibility
 
--   Tested with: PS4, and generic Bluetooth controllers. Supports standard mapping.
+- Tested with:
+  - **8BitDo** controller lineup (SN30 Pro, Pro 2, Ultimate, Lite, Zero 2, Micro, etc.)
+  - PS4 / DualShock 4, PS5 / DualSense, Xbox, and generic Bluetooth controllers supporting standard mapping.
+
+> [!NOTE]
+> **Touchpad Notice:** Touchpad click and touch/gesture coordinates on PlayStation or touchpad-equipped controllers may not work or be detected depending on OS and WebView browser Gamepad API limitations.
 
 ## Requirements
 
@@ -137,7 +142,7 @@ Drop-in component to see a controller diagram that lights up buttons, shows stic
 The State panel includes:
 
 -   Per-stick plots (left/right) with axis values, crosshairs, and a dashed trace from center to the current dot.
--   Touchpad click indicator (PS touchpad click is mapped to `touchpad`; position is not exposed by the Gamepad API).
+-   Touchpad indicator (Touchpad click/touch position may not work or be detected depending on OS/WebView environment).
 
 ```tsx
 import { GamepadDebug } from "react-native-earl-gamepad";

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.6] - 2026-08-03
+
+### Changed
+
+- Updated documentation in `README.md` to specify compatibility with the entire **8BitDo** controller lineup (SN30 Pro, Pro 2, Ultimate, Lite, Zero 2, Micro, etc.).
+- Added explicit notices in `README.md` clarifying that touchpad click and touch/gesture position coordinates may not work or be detected on all devices due to platform-specific OS and WebView Gamepad API limitations.
+- Modernized devDependencies and build scripts (`react` 19, `@types/react` 19, `typescript` 5.7+, `rimraf` clean script).
+
 ## [0.7.5] - 2026-01-18
 
 ### Added
