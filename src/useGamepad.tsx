@@ -1,10 +1,9 @@
-import {
+import React, {
 	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
-	type JSX,
 } from "react";
 import GamepadBridge from "./GamepadBridge";
 import type {
@@ -34,7 +33,7 @@ type Return = {
 	axes: Partial<Record<StickAxisName, number>>;
 	buttonValues: Partial<Record<GamepadButtonName, number>>;
 	isPressed: (key: GamepadButtonName) => boolean;
-	bridge: JSX.Element | null;
+	bridge: React.ReactNode;
 	info: GamepadInfo;
 	vibrate: (duration?: number, strength?: number) => void;
 	stopVibration: () => void;

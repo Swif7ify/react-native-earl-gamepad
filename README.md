@@ -142,7 +142,7 @@ The State panel includes:
 ```tsx
 import { GamepadDebug } from "react-native-earl-gamepad";
 
-export function DebugScreen() {
+export default function DebugScreen() {
 	return <GamepadDebug axisThreshold={0.2} />;
 }
 ```

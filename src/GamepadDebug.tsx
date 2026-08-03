@@ -346,7 +346,7 @@ export default function GamepadDebug({
 
 	const pressedList = useMemo(
 		() => Array.from(pressedButtons).sort(),
-		[pressedButtons]
+		[pressedButtons],
 	);
 	const pressed = (key: GamepadButtonName) => pressedButtons.has(key);
 	const axisValue = (key: StickAxisName) => axes[key] ?? 0;
@@ -358,7 +358,7 @@ export default function GamepadDebug({
 		xLabel: string,
 		yLabel: string,
 		x: number,
-		y: number
+		y: number,
 	) => (
 		<View style={styles.stickCard}>
 			<Text style={styles.stickTitle}>{title}</Text>
@@ -397,7 +397,7 @@ export default function GamepadDebug({
 														rotate: `${
 															Math.atan2(
 																dotY,
-																dotX
+																dotX,
 															) *
 															(180 / Math.PI)
 														}deg`,
@@ -563,14 +563,14 @@ export default function GamepadDebug({
 								"Axis 0 (leftX)",
 								"Axis 1 (leftY)",
 								axisValue("leftX"),
-								axisValue("leftY")
+								axisValue("leftY"),
 							)}
 							{renderStickCard(
 								"R STICK",
 								"Axis 2 (rightX)",
 								"Axis 3 (rightY)",
 								axisValue("rightX"),
-								axisValue("rightY")
+								axisValue("rightY"),
 							)}
 						</View>
 					</View>

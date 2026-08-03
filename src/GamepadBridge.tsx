@@ -51,6 +51,15 @@ const buildBridgeHtml = (axisThreshold: number) => `
   let prevButtons = [];
   let prevAxes = [];
   let prevInfoJson = '';
+  let prevStateJson = '';
+
+  function sendState(stateObj){
+    const nextJson = JSON.stringify(stateObj);
+    if (nextJson !== prevStateJson) {
+      prevStateJson = nextJson;
+      send(stateObj);
+    }
+  }
 
   function parseVendorProduct(id){
     const vendorMatch = /Vendor:\s?([0-9a-fA-F]+)/i.exec(id || '') || /VID_([0-9a-fA-F]+)/i.exec(id || '');
@@ -154,7 +163,7 @@ const buildBridgeHtml = (axisThreshold: number) => `
         prevAxes[index] = value;
       });
 
-      send({ type:'state', pressed: pressedNow, values: valueMap, axes: axesState });
+      sendState({ type:'state', pressed: pressedNow, values: valueMap, axes: axesState });
     } else {
       // If no pad, send a single disconnected info payload
       sendInfo(null);
@@ -180,7 +189,7 @@ const buildBridgeHtml = (axisThreshold: number) => `
         });
         prevAxes = [];
       }
-      send({ type:'state', pressed: [], values: {}, axes: {} });
+      sendState({ type:'state', pressed: [], values: {}, axes: {} });
     }
     requestAnimationFrame(poll);
   }
@@ -207,6 +216,12 @@ const buildBridgeHtml = (axisThreshold: number) => `
 </script>
 </body></html>`;
 
+type WebViewHandle = {
+	injectJavaScript: (script: string) => void;
+	setNativeProps?: (props: Record<string, unknown>) => void;
+	requestFocus?: () => void;
+};
+
 export default function GamepadBridge({
 	enabled = true,
 	axisThreshold = 0.15,
@@ -219,15 +234,12 @@ export default function GamepadBridge({
 	vibrationRequest,
 	style,
 }: Props) {
-	const webviewRef = useRef<WebView>(null);
+	const webviewRef = useRef<WebViewHandle | null>(null);
 	const html = useMemo(() => buildBridgeHtml(axisThreshold), [axisThreshold]);
 
 	const focusBridge = useCallback(() => {
 		// On Android controllers, ensure the WebView is focusable so DPAD events feed navigator.getGamepads
-		const node = webviewRef.current as unknown as {
-			setNativeProps?: (props: Record<string, unknown>) => void;
-			requestFocus?: () => void;
-		} | null;
+		const node = webviewRef.current;
 		node?.setNativeProps?.({ focusable: true, focusableInTouchMode: true });
 		node?.requestFocus?.();
 	}, []);
@@ -244,11 +256,11 @@ export default function GamepadBridge({
 			node.injectJavaScript(
 				`window.__earlVibrateOnce(${Math.max(
 					vibrationRequest.duration,
-					0
+					0,
 				)}, ${Math.max(
 					Math.min(vibrationRequest.strong, 1),
-					0
-				)}, ${Math.max(Math.min(vibrationRequest.weak, 1), 0)}); true;`
+					0,
+				)}, ${Math.max(Math.min(vibrationRequest.weak, 1), 0)}); true;`,
 			);
 		} else {
 			node.injectJavaScript(`window.__earlStopVibration(); true;`);
@@ -280,7 +292,7 @@ export default function GamepadBridge({
 
 	return (
 		<WebView
-			ref={webviewRef}
+			ref={webviewRef as any}
 			source={{ html }}
 			originWhitelist={["*"]}
 			onMessage={handleMessage}
